@@ -7,6 +7,7 @@ unknown API paths keep returning JSON 404s.
 
 from __future__ import annotations
 
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
@@ -15,6 +16,9 @@ from fastapi.responses import FileResponse
 from app.core.config import REPO_DIR
 
 DIST_DIR = REPO_DIR / "frontend" / "dist"
+
+# Python's table doesn't know the web-app manifest type everywhere.
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 # Hashed assets never change; index.html must always be revalidated so deploys take effect.
 IMMUTABLE = "public, max-age=31536000, immutable"

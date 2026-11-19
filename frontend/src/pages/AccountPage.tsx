@@ -22,6 +22,7 @@ import type { ActivityOut, Me, RecoveryCodeOut, SecurityOverview, SessionOut, Si
 import { useAuth, useMe } from "../auth/AuthContext";
 import { ConfirmDialog, Modal } from "../components/Modal";
 import { NewPasswordFields, PasswordInput, newPasswordValid } from "../components/password";
+import { InstallApp } from "../components/InstallApp";
 import { useToast } from "../components/Toast";
 import { Card, DateTime, EmptyState, ErrorState, KeyValue, Loading, Notice, PageHeader, Tabs, TextField, cx } from "../components/ui";
 import { ROLE_LABELS, initials } from "../lib/format";
@@ -209,6 +210,10 @@ function ProfileTab() {
               </div>
               <p className="mt-1 text-xs text-muted">Remembered on this device.</p>
             </fieldset>
+            <div>
+              <div className="label-caps mb-1">App</div>
+              <InstallApp />
+            </div>
           </div>
         </Card>
       </div>

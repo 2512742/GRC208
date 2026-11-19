@@ -23,7 +23,14 @@ export class ApiError extends Error {
 
 type Query = Record<string, string | number | boolean | null | undefined>;
 
+export const OFFLINE_MESSAGE = "You're offline or the server can't be reached. Try again when you're connected.";
+
 let onUnauthorized: (() => void) | null = null;
+let onNetwork: ((reachable: boolean) => void) | null = null;
+/** The PWA layer listens here: a failed request means offline, any answer means online. */
+export function setNetworkListener(handler: ((reachable: boolean) => void) | null): void {
+  onNetwork = handler;
+}
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   onUnauthorized = handler;
 }
@@ -84,12 +91,19 @@ export async function request<T>(
     const csrf = readCookie(CSRF_COOKIE);
     if (csrf) headers["X-CSRF-Token"] = csrf;
   }
-  const response = await fetch(buildUrl(path, options.query), {
-    method,
-    headers,
-    body,
-    credentials: "same-origin",
-  });
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, options.query), {
+      method,
+      headers,
+      body,
+      credentials: "same-origin",
+    });
+  } catch {
+    onNetwork?.(false);
+    throw new ApiError(0, OFFLINE_MESSAGE);
+  }
+  onNetwork?.(true);
   if (response.status === 204) return undefined as T;
   const text = await response.text();
   let data: unknown = null;

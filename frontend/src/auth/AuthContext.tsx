@@ -10,6 +10,9 @@ import { SYSTEM, TZ_STORAGE_KEY, resolveZone } from "../lib/time";
 interface AuthState {
   me: Me | null;
   loading: boolean;
+  /** The session couldn't be checked because the server is unreachable (not "signed out"). */
+  unreachable: boolean;
+  retry: () => void;
   /** The viewer's stored preference: "system" or an IANA zone from the allow-list. */
   tzPreference: string;
   /** The zone actually used for formatting. */
@@ -123,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       me,
       loading: meQuery.isLoading,
+      unreachable: !me && meQuery.error instanceof ApiError && meQuery.error.status === 0,
+      retry: () => void meQuery.refetch(),
       tzPreference,
       zone: resolveZone(tzPreference),
       can: (p) => permissions.has(p),
@@ -130,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       setTimezone,
     };
-  }, [me, anonTz, meQuery.isLoading, signIn, signOut, setTimezone]);
+  }, [me, anonTz, meQuery.isLoading, meQuery.error, meQuery.refetch, signIn, signOut, setTimezone]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

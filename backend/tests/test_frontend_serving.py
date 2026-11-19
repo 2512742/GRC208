@@ -17,6 +17,8 @@ def make_app(tmp_path: Path) -> TestClient:
     (dist / "index.html").write_text("<!doctype html><div id=root></div>", encoding="utf-8")
     (dist / "assets" / "index-abc.js").write_text("console.log(1)", encoding="utf-8")
     (dist / "theme-init.js").write_text("// theme", encoding="utf-8")
+    (dist / "sw.js").write_text("// service worker", encoding="utf-8")
+    (dist / "manifest.webmanifest").write_text('{"name": "RiskTrack"}', encoding="utf-8")
     (tmp_path / "secret.txt").write_text("nope", encoding="utf-8")
     app = FastAPI()
     app.add_middleware(SecurityHeadersMiddleware, hsts=True)
@@ -77,3 +79,15 @@ def test_vercel_static_headers_match_the_api() -> None:
     for name, value in BASE_HEADERS.items():
         assert headers[name] == value
     assert config["rewrites"][0] == {"source": "/api/(.*)", "destination": "/api/index"}
+
+
+def test_pwa_files_served_correctly(tmp_path: Path) -> None:
+    """The service worker must never be cached (so updates arrive) and the manifest needs its
+    media type; both stay under the same strict CSP."""
+    client = make_app(tmp_path)
+    worker = client.get("/sw.js")
+    assert worker.status_code == 200 and worker.headers["cache-control"] == "no-cache"
+    assert "javascript" in worker.headers["content-type"]
+    manifest = client.get("/manifest.webmanifest")
+    assert manifest.headers["content-type"].startswith("application/manifest+json")
+    assert "script-src 'self'" in manifest.headers["content-security-policy"]

@@ -147,6 +147,15 @@ From `backend/` (`python -m app.cli --help`):
 
 Every command prints the database it is about to use and asks before changing a remote one.
 
+## Install as an app (PWA)
+
+RiskTrack is a progressive web app: on Android or desktop Chrome and Edge use **Install the app** (My account, or More on a phone); on iPhone or iPad tap **Share, then Add to Home Screen**. It opens full screen with its own icon and shortcuts to the register, your actions and acceptances.
+
+- The service worker (`frontend/sw.template.js`, written to `dist/sw.js` at build time with the list of built files) caches only the app's own files. **Anything under `/api` is never cached**, so no risk data, evidence or personal data is kept on the device, and sign-out leaves nothing behind.
+- Offline, the app still opens and says so; data appears again when the connection returns.
+- After a deploy, open apps show "A new version of RiskTrack is ready" with a Reload button; old caches are deleted.
+- Installing needs HTTPS (Vercel, or `tinex.tech` with a certificate) or `localhost`.
+
 ## Account security
 
 RiskTrack sends no email, so account recovery follows the design of the team lead's Sentinel project:
@@ -214,6 +223,8 @@ frontend/src/layout/    app shell, role-based navigation, theme and time-zone co
 frontend/src/pages/     one file per screen (dashboard, register, risk detail, actions,
                         acceptances, assets, reports, import, audit, users, settings)
 frontend/src/lib/       time-zone formatting and number/label helpers
+frontend/src/pwa.ts     service-worker registration, updates, install prompt, offline state
+frontend/sw.template.js the service worker (app files only; never /api)
 vercel.json             Vercel config (region, static build, rewrites, headers)
 ```
 

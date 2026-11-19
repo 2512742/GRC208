@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, api, buildUrl, describeError } from "./client";
+import { ApiError, OFFLINE_MESSAGE, api, buildUrl, describeError, setNetworkListener } from "./client";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -38,5 +38,18 @@ describe("api client", () => {
   it("throws ApiError with the status", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: "Not found." }), { status: 404 })));
     await expect(api.get("/risks/999")).rejects.toEqual(new ApiError(404, "Not found."));
+  });
+});
+
+describe("network failures", () => {
+  it("report offline as status 0, then online again on the next answer", async () => {
+    const seen: boolean[] = [];
+    setNetworkListener((reachable) => seen.push(reachable));
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    await expect(api.get("/me")).rejects.toEqual(new ApiError(0, OFFLINE_MESSAGE));
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response("{}", { status: 200 })));
+    await api.get("/me");
+    expect(seen).toEqual([false, true]);
+    setNetworkListener(null);
   });
 });

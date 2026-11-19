@@ -17,6 +17,15 @@
   --primary-container: 0 80 73;
   --accent: 0 80 73;
   --on-accent: 255 255 255;
+  /* Solid fills (buttons, toasts, strong chips). In dark mode these are deep and muted so
+     nothing glows: light text on a dark fill instead of dark text on a bright one. */
+  --btn: 0 80 73;
+  --btn-hover: 0 55 50;
+  --on-btn: 255 255 255;
+  --danger-fill: 186 26 26;
+  --on-danger-fill: 255 255 255;
+  --strong-fill: 26 28 28;
+  --on-strong-fill: 249 249 249;
   --error: 186 26 26;
   --footer: 26 28 28;
   --band-low: 46 125 50;
@@ -39,6 +48,13 @@ html.dark {
   --primary-container: 0 39 36;
   --accent: 77 184 170;
   --on-accent: 13 22 21;
+  --btn: 31 111 102; /* #1f6f66, light text 5.3:1 */
+  --btn-hover: 38 128 118;
+  --on-btn: 230 244 242;
+  --danger-fill: 140 29 24; /* #8c1d18, light text 7:1 */
+  --on-danger-fill: 255 218 214;
+  --strong-fill: 72 28 26; /* dim red tint for "Above appetite", "Overdue", "Expired" */
+  --on-strong-fill: 255 196 189;
   --error: 255 180 171;
   --footer: 5 12 11;
   --band-low: 129 199 132;
@@ -85,7 +101,7 @@ html.dark {
     @apply inline-flex min-h-[36px] items-center justify-center gap-2 border px-4 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn border-accent bg-accent text-on-accent hover:bg-primary hover:border-primary;
+    @apply btn border-btn bg-btn text-on-btn hover:border-btn-hover hover:bg-btn-hover;
   }
   .btn-secondary {
     @apply btn border-line bg-surface text-ink hover:bg-hover;
@@ -94,7 +110,7 @@ html.dark {
     @apply btn border-transparent bg-transparent text-accent hover:bg-hover;
   }
   .btn-danger {
-    @apply btn border-danger bg-danger text-white hover:opacity-90 dark:text-bg;
+    @apply btn border-danger-fill bg-danger-fill text-on-danger-fill hover:opacity-90;
   }
   .btn-sm {
     @apply min-h-[30px] px-3 py-1 text-xs;
@@ -112,7 +128,7 @@ html.dark {
     @apply inline-flex max-w-full items-center gap-1 break-words border border-line px-2 py-0.5 text-xs font-semibold;
   }
   .chip-strong {
-    @apply chip border-ink bg-ink text-bg;
+    @apply chip border-strong-fill bg-strong-fill text-on-strong-fill dark:border-danger/40;
   }
   .table-base {
     @apply w-full border-collapse text-left;

@@ -6,7 +6,11 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import { ToastProvider } from "./components/Toast";
+import { PwaBanners } from "./components/PwaBanners";
+import { initPwa } from "./pwa";
 import "./theme/tokens.css";
+
+initPwa();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
         <ToastProvider>
           <AuthProvider>
             <App />
+            <PwaBanners />
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>

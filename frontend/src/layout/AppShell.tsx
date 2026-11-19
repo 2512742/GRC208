@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth, useMe } from "../auth/AuthContext";
+import { InstallApp } from "../components/InstallApp";
 import { cx } from "../components/ui";
 import { ROLE_LABELS } from "../lib/format";
 import { ThemeToggle, TimezoneSelect } from "./TopBarControls";
@@ -84,7 +85,7 @@ function DesktopUser() {
           <span className="block text-sm font-semibold">{me.full_name}</span>
           <span className="block text-[11px] text-white/70">{roleLine(me.job_title, me.role)}</span>
         </span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold text-primary-container">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold text-primary-container dark:bg-white/15 dark:text-white">
           {initials(me.full_name)}
         </span>
       </NavLink>
@@ -201,6 +202,7 @@ function MoreSheet({ onClose }: { onClose: () => void }) {
             <TimezoneSelect compact />
             <p className="mt-1 text-xs text-muted">Deadlines are always evaluated in WAT (Lagos).</p>
           </div>
+          <InstallApp compact />
           <button type="button" className="btn-secondary w-full" onClick={signOut}>
             <ArrowRightStartOnRectangleIcon className="h-5 w-5" aria-hidden /> Sign out
           </button>

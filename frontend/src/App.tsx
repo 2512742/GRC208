@@ -6,6 +6,7 @@ import { useAuth } from "./auth/AuthContext";
 import { Loading } from "./components/ui";
 import { AppShell } from "./layout/AppShell";
 import { ForcedPasswordPage } from "./pages/ForcedPasswordPage";
+import { OfflinePage } from "./pages/OfflinePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage, ForbiddenPage } from "./pages/NotFoundPage";
 
@@ -25,9 +26,10 @@ const KitchenSinkPage = lazy(() => import("./pages/KitchenSinkPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
 
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { me, loading } = useAuth();
+  const { me, loading, unreachable, retry } = useAuth();
   const location = useLocation();
   if (loading) return <Loading label="Checking your session…" />;
+  if (unreachable) return <OfflinePage retry={retry} />;
   if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   if (me.must_change_password) return <ForcedPasswordPage />;
   return <>{children}</>;

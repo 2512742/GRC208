@@ -138,7 +138,7 @@ export default function DashboardPage() {
                         <span className="mono-data">{count}</span>
                       </div>
                       <div className="mt-1 h-2 bg-container">
-                        <div className={`h-2 bg-band-${band}`} style={{ width: `${pct}%` }} />
+                        <div className={`h-2 bg-band-${band} dark:opacity-60`} style={{ width: `${pct}%` }} />
                       </div>
                     </Link>
                   </li>

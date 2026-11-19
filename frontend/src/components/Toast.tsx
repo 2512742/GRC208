@@ -53,8 +53,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             role={t.tone === "error" ? "alert" : "status"}
             className={`toast-in pointer-events-auto flex items-start gap-2 border p-3 text-sm ${
               t.tone === "success"
-                ? "border-accent bg-accent text-on-accent"
-                : "border-danger bg-danger text-white dark:text-bg"
+                ? "border-btn bg-btn text-on-btn"
+                : "border-danger-fill bg-danger-fill text-on-danger-fill"
             }`}
           >
             {t.tone === "success" ? (
