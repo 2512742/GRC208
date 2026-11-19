@@ -1,0 +1,19 @@
+asset_code,name,asset_type,service_code,owner_username,classification,obligations,description
+A-001,Mobile app,application,S1,emmanuel,confidential,NDPA-02;CBN-05,"Android and iOS apps for savings, goals and investments"
+A-002,Web app,application,S1,emmanuel,confidential,NDPA-02;PCI-06,Customer web application
+A-003,Wallet ledger,database,S1,emmanuel,restricted,CBN-01;NDPA-02,Double-entry ledger of customer wallet balances
+A-004,Savings engine,application,S1,emmanuel,confidential,CBN-05,"Scheduled daily and periodic Alajo debits, goal locks"
+A-005,Payment gateway integration,api,S1,emmanuel,restricted,PCI-03;PCI-04;CBN-02,Card and bank-transfer collections through payment partners
+A-006,Customer database,database,S1,emmanuel,restricted,NDPA-02;NDPA-03,Customer profiles and account data
+A-007,Investment platform,application,S2,anita,confidential,SEC-03,Mutual fund and treasury bill products
+A-008,Portfolio management system,application,S2,anita,confidential,SEC-02,"Holdings, valuations and statements"
+A-009,Fund manager API,third_party_service,S2,anita,restricted,SEC-01;SEC-03;CBN-02,Integration with SEC-licensed fund managers and trustees
+A-010,Market pricing feed,third_party_service,S2,anita,internal,SEC-02,Treasury bill and fund pricing data
+A-011,Investment admin portal,application,S2,anita,restricted,SEC-01,Back-office portfolio administration
+A-012,Reporting database,database,S2,anita,confidential,NDPA-02;SEC-02,Read replica for BI and regulatory returns
+A-013,KYC and BVN verification service,api,S3,gilbert,restricted,NDPA-01;NDPA-02;CBN-05,Identity and BVN checks during onboarding
+A-014,Onboarding portal,application,S3,gilbert,confidential,NDPA-01,Sign-up and identity capture
+A-015,Customer support platform,saas,S3,gilbert,confidential,NDPA-05,Ticketing and live chat (SaaS vendor)
+A-016,Identity document storage,data_store,S3,gilbert,restricted,NDPA-02;NDPA-03,Cloud bucket with NIN/BVN images and selfies
+A-017,Email and SMS notification service,third_party_service,S3,gilbert,internal,NDPA-05,OTPs and customer notifications via an aggregator
+A-018,Fraud monitoring tool,application,S3,gilbert,confidential,CBN-01,Transaction monitoring rules and alerts

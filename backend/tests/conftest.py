@@ -91,27 +91,14 @@ def _reset() -> None:
 
 # ── Database fixtures (P1) ──────────────────────────────────────────────────────────────────
 
-from alembic import command  # noqa: E402
-from alembic.config import Config  # noqa: E402
 from sqlalchemy import Connection, Engine  # noqa: E402
 from sqlmodel import Session  # noqa: E402
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
-def alembic_config(url: str) -> Config:
-    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
-    cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
-    cfg.attributes["database_url"] = url
-    cfg.attributes["configure_logger"] = False
-    return cfg
-
-
-def migrate_fresh(url: str) -> None:
-    """Drop everything (the PostgreSQL test DB is reused between runs) and rebuild to head."""
-    cfg = alembic_config(url)
-    command.downgrade(cfg, "base")
-    command.upgrade(cfg, "head")
+from app.migrations import alembic_config  # noqa: E402,F401  (re-exported for tests)
+from app.migrations import reset as migrate_fresh  # noqa: E402  (PG test DB is reused: rebuild)
 
 
 @pytest.fixture(scope="session")

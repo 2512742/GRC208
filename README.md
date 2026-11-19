@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (phases P0 Foundations, P1 Database, P2 Domain logic and P3 Auth API complete). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **in development** (phases P0 to P4 complete: foundations, database, domain logic, auth API, register API). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
@@ -29,11 +29,11 @@ python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 
-# 3. Database (in-project SQLite file backend/data/risktrack.sqlite3)
+# 3. Database with The Alajo demo data (in-project SQLite file backend/data/risktrack.sqlite3)
 alembic upgrade head
-python -m app.cli load-reference
-python -m app.cli create-user --username admin --full-name "System Administrator" --role admin
-#   (asks for a password: at least 10 characters, not containing the username)
+python -m app.cli seed-demo --reset
+#   (or, for an empty register: python -m app.cli load-reference
+#    and python -m app.cli create-user --username admin --full-name "Admin" --role admin)
 
 # 4. Run
 uvicorn app.main:app --reload
@@ -41,7 +41,22 @@ uvicorn app.main:app --reload
 
 Open http://127.0.0.1:8000/api/health (expect `"status": "ok"`) and the interactive API docs at http://127.0.0.1:8000/api/docs.
 
-Demo data and demo accounts *(later: `python -m app.cli seed-demo`)*.
+### Demo accounts (local SQLite demo only)
+
+`seed-demo` creates these fictional personas of The Alajo, all with the password **`Alajo-Demo-2026!`** when seeding a local SQLite database. For a remote database the command asks for a different password, which is never written down in the repository.
+
+| Username | Persona | Role |
+|---|---|---|
+| `admin` | System Administrator | admin |
+| `omotayo` | Omotayo Akinola, GRC Analyst | analyst |
+| `emmanuel` | Emmanuel Teye Adjei, Head of Engineering | risk owner |
+| `anita` | Anita Ojimba, Head of Investment Operations | risk owner |
+| `gilbert` | Gilbert Obichere, Head of Customer Support | risk owner |
+| `adeola` | Adeola Bamigboye, CISO | approver (also owns R-015) |
+| `kelechi` | Kelechi Kenneth Nwankwo, CRO | approver |
+| `ernestina` | Ernestina Lamiorkor Tawiah, Internal Auditor | auditor (read-only) |
+
+The demo data (3 services, 18 assets, 22 scored risks) lives in `sample_data/alajo_assets.csv` and `sample_data/alajo_risks.csv`, in the CSV import format. Edit them in a spreadsheet and re-run `seed-demo --reset`; invalid rows are reported with their row numbers. Dates are relative to the day you seed.
 
 > If your `.env` sets `DATABASE_URL`, these commands act on **that** database. CLI commands print the target and ask before touching a remote one.
 
@@ -120,7 +135,9 @@ backend/alembic/        migrations
 backend/app/core/auth.py        sessions, CSRF check, permission dependencies
 backend/app/core/permissions.py role table, ownership and separation-of-duties rules
 backend/app/services/   scoring, clock (WAT), workflow, audit chain, evidence checks, users
-backend/app/routers/    API routes: health, auth (/api/auth/*, /api/me), users
+backend/app/routers/    API routes: health, auth, users, register (services, assets,
+                        obligations, controls), risks (+ initial assessment)
+sample_data/            The Alajo demo data in CSV import format (owned by WS2)
 backend/tests/          pytest suite
 vercel.json             Vercel config (region, rewrites)
 ```
