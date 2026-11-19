@@ -48,7 +48,7 @@ const STRONG_STATUSES = new Set(["overdue", "expired", "acceptance_expired", "re
 export function StatusChip({ status }: { status: string | null | undefined }) {
   if (!status) return <span className="text-muted">—</span>;
   return (
-    <span className={cx(STRONG_STATUSES.has(status) ? "chip-strong" : "chip", "whitespace-nowrap")}>
+    <span className={STRONG_STATUSES.has(status) ? "chip-strong" : "chip"}>
       {sentenceCase(status)}
     </span>
   );
@@ -86,11 +86,14 @@ export function HeatMap({
       risk_codes: [],
     };
   return (
-    <div className="overflow-x-auto">
-      <div className="inline-grid min-w-full grid-cols-[auto_repeat(5,minmax(3rem,1fr))] gap-px">
-        <div className="label-caps flex items-end pb-1 pr-2 text-[10px]">L ↓ / I →</div>
+    <div>
+      <div className="grid w-full grid-cols-[1.25rem_repeat(5,minmax(0,1fr))] gap-px lg:grid-cols-[auto_repeat(5,minmax(0,1fr))]">
+        <div className="label-caps flex items-end justify-center pb-1 text-[10px]" title="Likelihood rows, impact columns">
+          <span aria-hidden>L\I</span>
+          <span className="sr-only">Likelihood rows, impact columns</span>
+        </div>
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={`h${i}`} className="label-caps px-1 pb-1 text-center text-[10px]" title={IMPACT_LABELS[i]}>
+          <div key={`h${i}`} className="label-caps truncate pb-1 text-center text-[10px]" title={IMPACT_LABELS[i]}>
             {i}
             <span className="hidden lg:inline"> {IMPACT_LABELS[i]}</span>
           </div>
@@ -121,7 +124,7 @@ function Row({
 }) {
   return (
     <>
-      <div className="label-caps flex items-center pr-2 text-[10px]" title={LIKELIHOOD_LABELS[l]}>
+      <div className="label-caps flex items-center justify-center text-[10px] lg:justify-start lg:pr-2" title={LIKELIHOOD_LABELS[l]}>
         {l}
         <span className="hidden lg:inline">&nbsp;{LIKELIHOOD_LABELS[l]}</span>
       </div>
@@ -139,17 +142,17 @@ function Row({
             aria-label={`Likelihood ${l}, impact ${i}, score ${cell.score} (${band}): ${cell.count} risk${cell.count === 1 ? "" : "s"}${cell.count ? `: ${cell.risk_codes.join(", ")}` : ""}`}
             title={cell.risk_codes.join(", ") || "No risks"}
             className={cx(
-              "relative flex aspect-[4/3] min-h-[2.75rem] flex-col items-center justify-center border",
+              "relative flex aspect-square min-w-0 flex-col items-center justify-center border sm:aspect-[4/3]",
               BAND_TINT[band],
               above ? "border-dashed border-ink/70" : "border-transparent",
               isSelected && "outline outline-2 outline-accent",
               cell.count > 0 && onSelect && "hover:brightness-95 dark:hover:brightness-125",
             )}
           >
-            <span className={cx("mono-data text-lg font-bold", cell.count ? BAND_TEXT[band].split(" ")[0] : "text-muted/50")}>
+            <span className={cx("mono-data text-base font-bold leading-none sm:text-lg", cell.count ? BAND_TEXT[band].split(" ")[0] : "text-muted/50")}>
               {cell.count || "·"}
             </span>
-            <span className="mono-data text-[10px] text-muted">{cell.score}</span>
+            <span className="mono-data mt-1 text-[10px] leading-none text-muted">{cell.score}</span>
           </button>
         );
       })}

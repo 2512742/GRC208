@@ -1,4 +1,4 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -21,6 +21,7 @@ export default function RisksPage() {
   const [params, setParams] = useSearchParams();
   const page = Number(params.get("page") ?? 1);
   const [search, setSearch] = useState(params.get("q") ?? "");
+  const [showFilters, setShowFilters] = useState(false);
 
   const services = useServices();
   const users = useUsers();
@@ -54,11 +55,13 @@ export default function RisksPage() {
   }
 
   const active = FILTER_KEYS.some((k) => params.get(k));
+  const activeCount = FILTER_KEYS.filter((k) => k !== "q" && params.get(k)).length;
 
   const columns: Column<RiskSummary>[] = [
     {
       key: "code",
       header: "ID",
+      hideOnMobile: true,
       render: (r) => (
         <Link to={`/risks/${r.risk_code}`} className="mono-data" onClick={(e) => e.stopPropagation()}>
           {r.risk_code}
@@ -66,7 +69,7 @@ export default function RisksPage() {
       ),
     },
     { key: "title", header: "Risk", render: (r) => <span className="font-medium">{r.title}</span>, className: "min-w-[16rem]" },
-    { key: "score", header: "Current score", render: (r) => <ScoreBadge score={r.current} /> },
+    { key: "score", header: "Current score", render: (r) => <ScoreBadge score={r.current} />, hideOnMobile: true },
     {
       key: "original",
       header: "Original",
@@ -113,14 +116,28 @@ export default function RisksPage() {
       />
 
       <div className="card mb-4 grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        <input
-          className="input sm:col-span-2 lg:col-span-1 xl:col-span-2"
-          type="search"
-          placeholder="Search title, ID, threat…"
-          aria-label="Search risks"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex gap-2 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+          <input
+            className="input"
+            type="search"
+            placeholder="Search title, ID, threat…"
+            aria-label="Search risks"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn-secondary shrink-0 md:hidden"
+            aria-expanded={showFilters}
+            aria-controls="risk-filters"
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            <FunnelIcon className="h-4 w-4" aria-hidden />
+            Filters{activeCount ? ` (${activeCount})` : ""}
+          </button>
+        </div>
+        {/* On phones the filters fold away; from md up they join the grid (display: contents). */}
+        <div id="risk-filters" className={`${showFilters ? "grid" : "hidden"} grid-cols-1 gap-3 sm:grid-cols-2 md:contents`}>
         <select aria-label="Service" className="input" value={params.get("service_id") ?? ""} onChange={(e) => update({ service_id: e.target.value })}>
           <option value="">All services</option>
           {(services.data ?? []).map((s) => (
@@ -166,7 +183,8 @@ export default function RisksPage() {
             </option>
           ))}
         </select>
-        <div className="flex items-center justify-between gap-3 sm:col-span-2 lg:col-span-4 xl:col-span-7">
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4 xl:col-span-7">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -209,6 +227,14 @@ export default function RisksPage() {
             columns={columns}
             rowKey={(r) => r.id}
             onRowClick={(r) => navigate(`/risks/${r.risk_code}`)}
+            mobileHeader={(r) => (
+              <div className="flex flex-col items-start gap-1.5">
+                <Link to={`/risks/${r.risk_code}`} className="mono-data font-semibold" onClick={(e) => e.stopPropagation()}>
+                  {r.risk_code}
+                </Link>
+                <ScoreBadge score={r.current} />
+              </div>
+            )}
             empty="No risks match these filters."
           />
           <Pagination

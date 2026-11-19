@@ -29,13 +29,13 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-col gap-3 border-b border-line pb-4 md:flex-row md:items-end md:justify-between">
+    <header className="mb-5 flex flex-col gap-3 border-b border-line pb-4 md:mb-6 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
         {eyebrow && <div className="label-caps mb-1">{eyebrow}</div>}
         <h1 className="break-words text-2xl md:text-h1">{title}</h1>
         {description && <p className="mt-1 max-w-3xl text-muted">{description}</p>}
       </div>
-      {actions && <div className="no-print flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="no-print flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">{actions}</div>}
     </header>
   );
 }
@@ -81,10 +81,10 @@ export function StatTile({
 }) {
   const body = (
     <>
-      <div className="label-caps">{label}</div>
+      <div className="label-caps text-[11px] leading-tight sm:text-xs">{label}</div>
       <div
         className={cx(
-          "mono-data mt-2 text-3xl font-bold",
+          "mono-data mt-1.5 text-2xl font-bold sm:mt-2 sm:text-3xl",
           tone === "alert" ? "text-danger" : "text-primary",
         )}
       >
@@ -94,11 +94,11 @@ export function StatTile({
     </>
   );
   return onClick ? (
-    <button type="button" onClick={onClick} className="card p-4 text-left hover:bg-hover">
+    <button type="button" onClick={onClick} className="card p-3 text-left hover:bg-hover sm:p-4">
       {body}
     </button>
   ) : (
-    <div className="card p-4">{body}</div>
+    <div className="card p-3 sm:p-4">{body}</div>
   );
 }
 
@@ -327,6 +327,7 @@ export function DataTable<T>({
   onRowClick,
   empty = "Nothing to show.",
   caption,
+  mobileHeader,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -334,6 +335,8 @@ export function DataTable<T>({
   onRowClick?: (row: T) => void;
   empty?: ReactNode;
   caption?: string;
+  /** Phone layout: a bold first line (e.g. ID and score) above the captioned fields. */
+  mobileHeader?: (row: T) => ReactNode;
 }) {
   if (rows.length === 0) return <EmptyState title={typeof empty === "string" ? empty : "Nothing to show."} />;
   return (
@@ -367,20 +370,23 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      <ul className="flex flex-col gap-2 md:hidden" aria-label={caption}>
+      <ul className="flex flex-col gap-3 md:hidden" aria-label={caption}>
         {rows.map((row) => (
           <li
             key={rowKey(row)}
-            className={cx("card p-3", onRowClick && "cursor-pointer active:bg-hover")}
+            className={cx("card px-3 py-2.5", onRowClick && "cursor-pointer active:bg-hover")}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
           >
-            <dl className="grid grid-cols-[minmax(0,7.5rem)_1fr] gap-x-3 gap-y-1.5">
+            {mobileHeader && <div className="mb-2 border-b border-line pb-2">{mobileHeader(row)}</div>}
+            <dl className="grid grid-cols-[68px_minmax(0,1fr)] gap-x-2.5 gap-y-1">
               {columns
                 .filter((c) => !c.hideOnMobile)
                 .map((c) => (
                   <div key={c.key} className="contents">
-                    <dt className="label-caps pt-0.5">{c.header}</dt>
-                    <dd className="min-w-0 break-words">{c.render(row)}</dd>
+                    <dt className="pt-0.5 text-[0.6rem] font-bold uppercase leading-snug tracking-[0.07em] text-muted">
+                      {c.header}
+                    </dt>
+                    <dd className="min-w-0 break-words text-[13px]">{c.render(row)}</dd>
                   </div>
                 ))}
             </dl>
@@ -435,7 +441,7 @@ export function Tabs<K extends string>({
   onChange: (key: K) => void;
 }) {
   return (
-    <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-line">
+    <div role="tablist" className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 [scrollbar-width:none] md:mx-0 md:px-0">
       {tabs.map((t) => (
         <button
           key={t.key}

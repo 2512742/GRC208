@@ -1,3 +1,4 @@
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -35,15 +36,22 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="flex items-center justify-end gap-2 border-b border-line bg-surface p-3">
-        <TimezoneSelect compact />
-        <ThemeToggle />
-      </div>
+      <header className="flex h-14 items-center gap-2 border-b border-outline bg-primary-container px-4 pt-[env(safe-area-inset-top)] text-white">
+        <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <ShieldCheckIcon className="h-6 w-6" aria-hidden /> RiskTrack
+        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <div className="w-36 sm:w-56">
+            <TimezoneSelect compact />
+          </div>
+          <ThemeToggle onDark />
+        </div>
+      </header>
       <main className="flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="mb-6">
             <div className="label-caps">The Alajo · GRC</div>
-            <h1 className="mt-1">RiskTrack</h1>
+            <h1 className="mt-1">Sign in</h1>
             <p className="mt-1 text-muted">
               Cyber risk register and treatment management. Sign in with your Alajo account.
             </p>

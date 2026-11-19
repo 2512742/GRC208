@@ -109,7 +109,7 @@ html.dark {
     @apply flex items-center justify-between gap-2 border-b border-line px-4 py-3;
   }
   .chip {
-    @apply inline-flex items-center gap-1 border border-line px-2 py-0.5 text-xs font-semibold;
+    @apply inline-flex max-w-full items-center gap-1 break-words border border-line px-2 py-0.5 text-xs font-semibold;
   }
   .chip-strong {
     @apply chip border-ink bg-ink text-bg;
@@ -118,14 +118,47 @@ html.dark {
     @apply w-full border-collapse text-left;
   }
   .table-base th {
-    @apply label-caps border-b border-line px-3 py-2 align-bottom;
+    @apply label-caps border-b border-line px-1.5 py-2 align-bottom text-[10px] sm:px-3 sm:text-xs;
   }
   .table-base td {
-    @apply border-b border-line px-3 py-2 align-top;
+    @apply border-b border-line px-1.5 py-2 align-top sm:px-3;
+  }
+  .table-base th:first-child,
+  .table-base td:first-child {
+    @apply pl-0 sm:pl-3;
+  }
+  .table-base th:last-child,
+  .table-base td:last-child {
+    @apply pr-0 sm:pr-3;
   }
   .table-base tbody tr:hover {
     @apply bg-hover;
   }
+}
+
+/* Phones and tablets: app-style bottom tab bar (Guardian _bottom_nav_style.html); keep the
+   page clear of it and of the iPhone home indicator. */
+@media (max-width: 1023px) {
+  .app-main {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
+.app-tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sheet-in {
+  animation: sheet-in 200ms ease-out;
 }
 
 @media print {
@@ -156,7 +189,8 @@ html.dark {
   animation: toast-in 250ms ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
-  .toast-in {
+  .toast-in,
+  .sheet-in {
     animation: none;
   }
 }

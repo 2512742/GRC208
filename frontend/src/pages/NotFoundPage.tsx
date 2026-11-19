@@ -1,11 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { PageHeader } from "../components/ui";
 
 export function NotFoundPage() {
+  const { pathname } = useLocation();
   return (
     <>
-      <PageHeader title="Page not found" description="That address doesn't match any screen." />
+      <PageHeader
+        title="Page not found"
+        description={
+          <>
+            <span className="mono-data break-all">{pathname}</span> doesn't match any screen.
+          </>
+        }
+      />
       <Link to="/">Back to the dashboard</Link>
     </>
   );

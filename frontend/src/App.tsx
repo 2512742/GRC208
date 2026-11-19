@@ -41,6 +41,7 @@ export function App() {
     <Suspense fallback={<Loading />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route path="/kitchen-sink" element={<KitchenSinkPage />} />
         <Route
           element={

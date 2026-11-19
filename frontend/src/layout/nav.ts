@@ -5,6 +5,8 @@ import {
   ClipboardDocumentCheckIcon,
   Cog6ToothIcon,
   DocumentChartBarIcon,
+  EllipsisHorizontalCircleIcon,
+  HomeIcon,
   FingerPrintIcon,
   ServerStackIcon,
   ShieldExclamationIcon,
@@ -32,6 +34,16 @@ export const NAV: NavItem[] = [
   { to: "/users", label: "Users", icon: UsersIcon, permission: "manage_users" },
   { to: "/settings", label: "Settings", icon: Cog6ToothIcon, permission: "manage_settings" },
 ];
+
+/** Phone/tablet bottom tab bar: four everyday screens, the rest under "More". */
+export const TAB_ITEMS: NavItem[] = [
+  { to: "/", label: "Home", icon: HomeIcon },
+  { to: "/risks", label: "Risks", icon: ShieldExclamationIcon },
+  { to: "/actions", label: "Actions", icon: ClipboardDocumentCheckIcon },
+  { to: "/approvals", label: "Approvals", icon: CheckBadgeIcon },
+];
+
+export const MORE_ICON = EllipsisHorizontalCircleIcon;
 
 export function navFor(can: (p: string) => boolean): NavItem[] {
   return NAV.filter((item) => !item.permission || can(item.permission));
