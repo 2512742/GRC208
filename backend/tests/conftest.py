@@ -142,3 +142,64 @@ def db(connection: Connection) -> Iterator[Session]:
     """ORM session on the rolled-back connection. Use `expect_db_error` for failing writes."""
     with Session(bind=connection, join_transaction_mode="create_savepoint") as session:
         yield session
+
+
+# ── API fixtures (P3) ───────────────────────────────────────────────────────────────────────
+
+DEMO_PASSWORD = "Alajo-Demo-2026!"
+_DEMO_HASH: str | None = None
+
+
+@pytest.fixture
+def api(db: Session) -> Iterator[TestClient]:
+    """HTTPS test client whose requests share the test's rolled-back transaction."""
+    from app.db import get_session
+
+    application = create_app()
+    application.dependency_overrides[get_session] = lambda: db
+    with TestClient(application, base_url="https://testserver") as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def people(db: Session) -> dict[str, object]:
+    """The demo personas (PLAN.md §4.3), all with DEMO_PASSWORD."""
+    import app.services.users as users_service
+    from app.core.security import hash_password
+    from app.models.enums import Role
+
+    global _DEMO_HASH
+    if _DEMO_HASH is None:
+        _DEMO_HASH = hash_password(DEMO_PASSWORD)  # Argon2 is slow on purpose: hash once
+    real_hash = users_service.hash_password
+    users_service.hash_password = lambda pw: _DEMO_HASH if pw == DEMO_PASSWORD else real_hash(pw)
+
+    cast = {
+        "admin": ("System Administrator", Role.ADMIN),
+        "omotayo": ("Omotayo Akinola", Role.ANALYST),
+        "emmanuel": ("Emmanuel Teye Adjei", Role.OWNER),
+        "anita": ("Anita Ojimba", Role.OWNER),
+        "adeola": ("Adeola Bamigboye", Role.APPROVER),
+        "kelechi": ("Kelechi Kenneth Nwankwo", Role.APPROVER),
+        "ernestina": ("Ernestina Lamiorkor Tawiah", Role.AUDITOR),
+    }
+    try:
+        users = {
+            name: users_service.create_user(
+                db, username=name, full_name=full, role=role, password=DEMO_PASSWORD
+            )
+            for name, (full, role) in cast.items()
+        }
+    finally:
+        users_service.hash_password = real_hash
+    db.commit()  # commits the savepoint only; still rolled back after the test
+    return users  # type: ignore[return-value]
+
+
+def sign_in(client: TestClient, username: str, password: str = DEMO_PASSWORD) -> str:
+    """Log in and make the client send the CSRF header from now on. Returns the token."""
+    response = client.post("/api/auth/login", json={"username": username, "password": password})
+    assert response.status_code == 200, response.text
+    token = response.json()["csrf_token"]
+    client.headers["X-CSRF-Token"] = token
+    return token

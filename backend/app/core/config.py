@@ -62,6 +62,18 @@ class Settings(BaseSettings):
     # Optional log file for local runs; never used on serverless hosts.
     log_file: Path | None = None
 
+    # Sessions: absolute lifetime and idle timeout.
+    session_hours: int = Field(default=12, ge=1, le=72)
+    session_idle_minutes: int = Field(default=120, ge=5, le=1440)
+
+    # Login throttling (counted from the audit log, so it holds across serverless instances).
+    login_max_failures: int = Field(default=5, ge=1)  # per username per window
+    login_max_failures_per_ip: int = Field(default=20, ge=1)  # per address per window
+    login_lockout_minutes: int = Field(default=15, ge=1)
+
+    # Trust X-Forwarded-For for the client address. Always on under Vercel's proxy.
+    trust_proxy_headers: bool = False
+
     @field_validator("database_url", "database_url_direct")
     @classmethod
     def _normalise_url(cls, value: str | None) -> str | None:
@@ -82,6 +94,15 @@ class Settings(BaseSettings):
     def is_serverless(self) -> bool:
         """True on Vercel (it sets VERCEL=1 in every function)."""
         return bool(os.getenv("VERCEL"))
+
+    @property
+    def trusts_proxy(self) -> bool:
+        return self.trust_proxy_headers or self.is_serverless
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Cookies are HTTPS-only except while developing locally with DEBUG=true."""
+        return not self.debug
 
     @property
     def is_sqlite(self) -> bool:

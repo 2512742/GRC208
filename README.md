@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (phases P0 Foundations and P1 Database complete). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **in development** (phases P0 Foundations, P1 Database, P2 Domain logic and P3 Auth API complete). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
@@ -32,6 +32,8 @@ pip install -r requirements-dev.txt
 # 3. Database (in-project SQLite file backend/data/risktrack.sqlite3)
 alembic upgrade head
 python -m app.cli load-reference
+python -m app.cli create-user --username admin --full-name "System Administrator" --role admin
+#   (asks for a password: at least 10 characters, not containing the username)
 
 # 4. Run
 uvicorn app.main:app --reload
@@ -71,6 +73,13 @@ The suite refuses to run on any PostgreSQL database whose name doesn't contain "
 
 GitHub Actions runs the SQLite and `postgres:18` container variants on every push and pull request (`.github/workflows/ci.yml`); CI never receives Neon credentials.
 
+## Signing in (API)
+
+- `POST /api/auth/login` with `{"username", "password"}` sets two cookies: an HttpOnly session cookie and a readable CSRF cookie. The response includes `csrf_token`.
+- Every `POST`, `PATCH`, `PUT` and `DELETE` must send that token in the `X-CSRF-Token` header, or it is refused with 403 (and audited).
+- Sessions end after 2 idle hours or 12 hours in total. Five failed sign-ins for a username lock it for 15 minutes (counted from the audit log, so the limit holds across serverless instances).
+- Try it in the interactive docs at `/api/docs`.
+
 ## Configuration
 
 All settings come from environment variables or `.env` (real environment variables win). See `.env.example`.
@@ -83,6 +92,9 @@ All settings come from environment variables or `.env` (real environment variabl
 | `DATABASE_URL_DIRECT` | no | `DATABASE_URL` | Neon **direct** URL, used only for migrations |
 | `ORG_TIMEZONE` | no | `Africa/Lagos` | Deadlines and expiry are evaluated in this zone |
 | `LOG_FILE` | no | none | Local runs only |
+| `SESSION_HOURS` / `SESSION_IDLE_MINUTES` | no | `12` / `120` | Absolute and idle session limits |
+| `LOGIN_MAX_FAILURES` / `LOGIN_LOCKOUT_MINUTES` | no | `5` / `15` | Per-username sign-in lockout |
+| `TRUST_PROXY_HEADERS` | no | `false` | Use `X-Forwarded-For` for client IPs (automatic on Vercel; set `true` behind a VPS reverse proxy) |
 
 ## Deployment (Vercel + Neon)
 
@@ -105,7 +117,10 @@ backend/app/models/     tables (SQLModel) with database-level rules
 backend/app/reference/  framework controls and regulatory obligations catalogue
 backend/app/cli.py      management commands (python -m app.cli --help)
 backend/alembic/        migrations
-backend/app/routers/    API routes (currently: health)
+backend/app/core/auth.py        sessions, CSRF check, permission dependencies
+backend/app/core/permissions.py role table, ownership and separation-of-duties rules
+backend/app/services/   scoring, clock (WAT), workflow, audit chain, evidence checks, users
+backend/app/routers/    API routes: health, auth (/api/auth/*, /api/me), users
 backend/tests/          pytest suite
 vercel.json             Vercel config (region, rewrites)
 ```

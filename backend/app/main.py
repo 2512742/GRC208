@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from app.core.config import get_settings
 from app.core.headers import SecurityHeadersMiddleware
 from app.core.logging import configure_logging
-from app.routers import health
+from app.routers import auth, health, users
 
 API_PREFIX = "/api"
 
@@ -33,6 +33,8 @@ def create_app() -> FastAPI:
     )
     application.add_middleware(SecurityHeadersMiddleware, hsts=not settings.debug)
     application.include_router(health.router, prefix=API_PREFIX)
+    application.include_router(auth.router, prefix=API_PREFIX)
+    application.include_router(users.router, prefix=API_PREFIX)
     return application
 
 

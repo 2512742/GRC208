@@ -42,9 +42,18 @@ def build_engine(settings: Settings) -> Engine:
 
         @event.listens_for(engine, "connect")
         def _sqlite_pragmas(dbapi_connection: Any, _record: Any) -> None:
+            # Python's sqlite3 driver delays BEGIN until the first write, which makes SAVEPOINTs
+            # start (and RELEASE commit) their own transactions. Take over transaction control
+            # so SQLite transactions and savepoints behave like PostgreSQL's (SQLAlchemy recipe:
+            # "Serializable isolation / Savepoints / Transactional DDL").
+            dbapi_connection.isolation_level = None
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
+
+        @event.listens_for(engine, "begin")
+        def _sqlite_begin(connection: Any) -> None:
+            connection.exec_driver_sql("BEGIN")
 
     return engine
 
