@@ -187,37 +187,25 @@ function BatchView({
           {batch.total_rows} rows · {batch.valid_rows} valid · {batch.rejected_rows} rejected · {batch.duplicate_rows} duplicate
         </span>
       </div>
-      <div className="max-h-[28rem] overflow-auto border border-line">
-        <table className="table-base text-xs">
-          <thead className="sticky top-0 bg-surface">
-            <tr>
-              <th>Row</th>
-              <th>Result</th>
-              <th>Values</th>
-              <th>Reasons</th>
-            </tr>
-          </thead>
-          <tbody>
-            {batch.rows.map((r) => (
-              <tr key={r.row}>
-                <td className="mono-data">{r.row}</td>
-                <td>
-                  <span className={cx("chip", STATUS_TONE[r.status])}>{r.status}</span>
-                  {r.created && <div className="mono-data mt-1 font-bold">{r.created}</div>}
-                </td>
-                <td className="max-w-[16rem] break-words text-muted">
-                  {Object.entries(r.values as Record<string, unknown>)
-                    .filter(([, v]) => v !== "" && v !== null)
-                    .slice(0, 4)
-                    .map(([k, v]) => `${k}: ${String(v)}`)
-                    .join(" · ")}
-                </td>
-                <td className={r.reasons.length ? "font-medium text-danger" : "text-muted"}>{r.reasons.join("; ") || "OK"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ol className="max-h-[32rem] divide-y divide-line overflow-y-auto border border-line" aria-label="Rows in the file">
+        {batch.rows.map((r) => (
+          <li key={r.row} className="flex flex-col gap-1 px-3 py-2.5 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mono-data text-xs text-muted">Row {r.row}</span>
+              <span className={cx("chip", STATUS_TONE[r.status])}>{r.status}</span>
+              {r.created && <span className="mono-data font-bold">→ {r.created}</span>}
+            </div>
+            <div className="break-words text-xs text-muted">
+              {Object.entries(r.values as Record<string, unknown>)
+                .filter(([, v]) => v !== "" && v !== null)
+                .slice(0, 4)
+                .map(([k, v]) => `${k}: ${String(v)}`)
+                .join(" · ")}
+            </div>
+            {r.reasons.length > 0 && <div className="break-words font-medium text-danger">{r.reasons.join("; ")}</div>}
+          </li>
+        ))}
+      </ol>
       {open && (
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn-primary" disabled={busy || batch.valid_rows === 0} onClick={onCommit}>

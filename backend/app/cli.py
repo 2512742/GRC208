@@ -93,6 +93,47 @@ def create_user_command(
         typer.echo(f"Created {user.username} ({user.role}), id {user.id}")
 
 
+@cli.command("reset-password")
+def reset_password_command(
+    username: str = typer.Option(..., help="The account to recover"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Don't ask before touching a remote DB"),
+) -> None:
+    """Offline recovery (e.g. a lost admin password): sets a one-off temporary password that must
+    be changed at the next sign-in, ends the account's sessions, and unlocks nothing else.
+    Needs shell access to the server and its .env, which is the proof of authority."""
+    from sqlmodel import func, select
+
+    from app.models import User
+    from app.models.enums import AuditAction
+    from app.services import account, audit
+
+    confirm_target(get_settings().database_url, yes)
+    with Session(get_engine()) as session:
+        user = session.exec(
+            select(User).where(func.lower(User.username) == username.strip().lower())
+        ).first()
+        if user is None:
+            typer.echo(f"No user '{username}'.", err=True)
+            raise typer.Exit(code=1)
+        temporary = account.temporary_password()
+        account.set_password(session, user, temporary, must_change=True)
+        ended = account.revoke_sessions(session, user.id or 0)
+        audit.record(
+            session,
+            AuditAction.UPDATE,
+            audit.SYSTEM,
+            object_type="user",
+            object_id=user.id,
+            detail=f"password reset from the command line; {ended} session(s) ended",
+        )
+        name, active = user.username, user.is_active
+        session.commit()
+    typer.echo(f"Temporary password for {name}: {temporary}")
+    typer.echo("It must be changed at the next sign-in. Share it privately, never in chat.")
+    if not active:
+        typer.echo("Note: this account is disabled; an administrator must enable it first.")
+
+
 # Local-only convenience: documented in the README, never used for a remote database.
 LOCAL_DEMO_PASSWORD = "Alajo-Demo-2026!"  # noqa: S105  (local SQLite demo only)
 

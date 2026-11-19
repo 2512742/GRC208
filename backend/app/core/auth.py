@@ -31,6 +31,16 @@ from app.services.clock import now_utc
 SESSION_COOKIE = "risktrack_session"
 CSRF_COOKIE = "risktrack_csrf"
 CSRF_HEADER = "X-CSRF-Token"
+MUST_CHANGE_PASSWORD = "Change your password before continuing."  # noqa: S105 (message)
+PASSWORD_CHANGE_ROUTES = frozenset(
+    {
+        "/api/me",
+        "/api/me/password",
+        "/api/me/security",
+        "/api/me/preferences",
+        "/api/auth/logout",
+    }
+)
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 LAST_SEEN_WRITE_INTERVAL = timedelta(minutes=5)  # avoid a database write on every request
 
@@ -95,6 +105,11 @@ def get_auth(
         csrf_token=csrf_token_for(token, settings.secret_key.get_secret_value()),
         ip=client_ip(request, settings),
     )
+
+    # After an administrator sets a password, nothing works until the user replaces it
+    # (Sentinel's must_change_password). The few routes needed to do that stay open.
+    if user.must_change_password and request.url.path not in PASSWORD_CHANGE_ROUTES:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, MUST_CHANGE_PASSWORD)
 
     if request.method not in SAFE_METHODS and not csrf_matches(
         request.headers.get(CSRF_HEADER), ctx.csrf_token

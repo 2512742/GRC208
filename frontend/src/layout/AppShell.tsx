@@ -17,6 +17,7 @@ import { useAuth, useMe } from "../auth/AuthContext";
 import { cx } from "../components/ui";
 import { ROLE_LABELS } from "../lib/format";
 import { ThemeToggle, TimezoneSelect } from "./TopBarControls";
+import { initials } from "../lib/format";
 import { MORE_ICON, TAB_ITEMS, navFor } from "./nav";
 
 function Brand() {
@@ -74,10 +75,19 @@ function DesktopUser() {
   const signOut = useSignOut();
   return (
     <div className="flex items-center gap-2">
-      <div className="hidden text-right leading-tight xl:block">
-        <div className="text-sm font-semibold text-white">{me.full_name}</div>
-        <div className="text-[11px] text-white/70">{roleLine(me.job_title, me.role)}</div>
-      </div>
+      <NavLink
+        to="/account"
+        className="flex items-center gap-2 text-white no-underline hover:no-underline"
+        title="My account"
+      >
+        <span className="hidden text-right leading-tight xl:block">
+          <span className="block text-sm font-semibold">{me.full_name}</span>
+          <span className="block text-[11px] text-white/70">{roleLine(me.job_title, me.role)}</span>
+        </span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold text-primary-container">
+          {initials(me.full_name)}
+        </span>
+      </NavLink>
       <button
         type="button"
         className="p-2 text-white/80 hover:text-white"
@@ -94,7 +104,7 @@ function DesktopUser() {
 /** Bottom tab bar for phones and tablets (Guardian app-tabbar). */
 function TabBar({ onMore, moreActive }: { onMore: () => void; moreActive: boolean }) {
   const base =
-    "flex min-w-0 flex-col items-center gap-1 border-t-2 px-1 pb-1.5 pt-2 text-[11px] font-semibold no-underline hover:no-underline";
+    "flex min-w-0 flex-col items-center gap-1 border-t-2 px-0.5 pb-1.5 pt-2 text-[10px] font-semibold no-underline hover:no-underline sm:text-[11px]";
   const MoreIcon = MORE_ICON;
   return (
     <nav
@@ -111,7 +121,7 @@ function TabBar({ onMore, moreActive }: { onMore: () => void; moreActive: boolea
           }
         >
           <Icon className="h-[22px] w-[22px]" aria-hidden />
-          <span className="truncate">{label}</span>
+          <span className="w-full truncate text-center">{label}</span>
         </NavLink>
       ))}
       <button
@@ -151,10 +161,15 @@ function MoreSheet({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="sheet-in absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{me.full_name}</div>
-            <div className="truncate text-xs text-muted">{roleLine(me.job_title, me.role)}</div>
-          </div>
+          <NavLink to="/account" onClick={onClose} className="flex min-w-0 items-center gap-3 text-ink no-underline hover:no-underline">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-sm font-bold text-white">
+              {initials(me.full_name)}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{me.full_name}</span>
+              <span className="block truncate text-xs text-muted">{roleLine(me.job_title, me.role)} · My account</span>
+            </span>
+          </NavLink>
           <button type="button" className="btn-ghost btn-sm px-2" aria-label="Close" onClick={onClose}>
             <XMarkIcon className="h-6 w-6" aria-hidden />
           </button>

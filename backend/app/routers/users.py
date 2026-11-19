@@ -6,14 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, col, select
 
 from app.core.auth import AuthContext, deny, get_auth, require
+from app.core.config import Settings, get_settings
 from app.core.permissions import Perm
-from app.core.security import hash_password
 from app.db import get_session
-from app.models import User, UserSession
+from app.models import User
 from app.models.enums import AuditAction, Role
+from app.routers.account import security_overview
+from app.schemas.account import SecurityOverview, SignedOut
 from app.schemas.auth import UserCreate, UserDetail, UserSummary, UserUpdate
-from app.services import audit
-from app.services.clock import now_utc
+from app.services import account, audit
 from app.services.users import (
     UserError,
     check_password,
@@ -59,7 +60,8 @@ def add_user(
     db: Session = Depends(get_session),
 ) -> User:
     try:
-        user = create_user(db, **body.model_dump(), by=ctx.audit_actor)
+        # The administrator knows this password, so the user must replace it at first sign-in.
+        user = create_user(db, **body.model_dump(), must_change_password=True, by=ctx.audit_actor)
     except UserError as exc:
         db.rollback()
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
@@ -104,18 +106,12 @@ def change_user(
     for field, value in changes.items():
         setattr(user, field, value.value if isinstance(value, Role) else value)
     if new_password is not None:
-        user.password_hash = hash_password(new_password)
+        account.set_password(db, user, new_password, must_change=True)
     db.add(user)
 
     # Disabling an account or resetting its password signs it out everywhere.
     if changes.get("is_active") is False or new_password is not None:
-        for session in db.exec(
-            select(UserSession).where(
-                UserSession.user_id == user.id, col(UserSession.revoked_at).is_(None)
-            )
-        ):
-            session.revoked_at = now_utc()
-            db.add(session)
+        account.revoke_sessions(db, user.id or 0)
 
     after = public_fields(user)
     audit.record(
@@ -126,8 +122,50 @@ def change_user(
         object_id=user.id,
         before=before,
         after=after,
-        detail="password reset" if new_password is not None else None,
+        detail=(
+            "password reset by an administrator (must be changed at next sign-in)"
+            if new_password is not None
+            else None
+        ),
     )
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.get("/{user_id}/security", response_model=SecurityOverview)
+def user_security(
+    user_id: int,
+    _: AuthContext = Depends(require(Perm.MANAGE_USERS)),
+    db: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> SecurityOverview:
+    """Account status for the admin: lockout, sessions, recovery code set (never the code)."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    return security_overview(db, user, settings)
+
+
+@router.post("/{user_id}/sign-out-everywhere", response_model=SignedOut)
+def sign_out_everywhere(
+    user_id: int,
+    ctx: AuthContext = Depends(require(Perm.MANAGE_USERS)),
+    db: Session = Depends(get_session),
+) -> SignedOut:
+    """End every session of an account, e.g. after a lost phone or a suspected compromise."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
+    keep = ctx.session.id if user.id == ctx.user.id else None
+    ended = account.revoke_sessions(db, user.id or 0, keep_id=keep)
+    audit.record(
+        db,
+        AuditAction.LOGOUT,
+        ctx.audit_actor,
+        object_type="user",
+        object_id=user.id,
+        detail=f"administrator ended {ended} session(s) of {user.username}",
+    )
+    db.commit()
+    return SignedOut(sessions_ended=ended)

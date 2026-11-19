@@ -10,6 +10,7 @@ import {
   FingerPrintIcon,
   ServerStackIcon,
   ShieldExclamationIcon,
+  UserCircleIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import type { ComponentType, SVGProps } from "react";
@@ -33,6 +34,7 @@ export const NAV: NavItem[] = [
   { to: "/audit", label: "Audit log", icon: FingerPrintIcon, permission: "view_audit" },
   { to: "/users", label: "Users", icon: UsersIcon, permission: "manage_users" },
   { to: "/settings", label: "Settings", icon: Cog6ToothIcon, permission: "manage_settings" },
+  { to: "/account", label: "My account", icon: UserCircleIcon },
 ];
 
 /** Phone/tablet bottom tab bar: four everyday screens, the rest under "More". */

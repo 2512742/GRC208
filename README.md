@@ -142,8 +142,20 @@ From `backend/` (`python -m app.cli --help`):
 | `create-user` | Create a user (e.g. the first admin) |
 | `verify-audit` | Recompute the audit hash chain; exit code 1 if broken |
 | `export-backup [--out DIR] [--no-with-evidence]` | Write every table to one JSON file in `backups/` (git-ignored; contains personal data and password hashes) |
+| `reset-password --username NAME` | Offline recovery (e.g. a lost admin password): prints a temporary password that must be changed at the next sign-in, and ends that account's sessions |
+| `export-openapi` | Write `openapi.json`, from which the frontend generates its types (`npm run gen:api`) |
 
 Every command prints the database it is about to use and asks before changing a remote one.
+
+## Account security
+
+RiskTrack sends no email, so account recovery follows the design of the team lead's Sentinel project:
+
+- **My account** (avatar in the top bar, or More on a phone): edit your profile, choose the display time zone and theme, change your password (needs the current one; your other sessions are signed out), see and sign out your sessions, and review your recent sign-ins and failed attempts.
+- **Recovery code:** generate a one-time code under My account (you confirm your password first). It is shown once, stored only as an Argon2 hash, and replaced by any newer code. "Forgot password?" on the sign-in page takes your username, the code and a new password; the code is then used up and every session ends.
+- **Administrator resets:** a password set by an administrator (new account or reset) is temporary. The user can do nothing else until they replace it, so the administrator never knows a working password. Administrators also see each account's security status (lockout, sessions, whether a recovery code exists, never the code) and can sign an account out everywhere.
+- **Lockout (defaults, set in `.env`):** 5 wrong passwords or recovery codes within 15 minutes pause sign-in for that username (20 per network address); it lifts by itself. Every attempt is in the audit log.
+- **Lost administrator password:** `python -m app.cli reset-password --username admin` on the server.
 
 ## Configuration
 
@@ -185,7 +197,8 @@ backend/alembic/        migrations
 backend/app/core/auth.py        sessions, CSRF check, permission dependencies
 backend/app/core/permissions.py role table, ownership and separation-of-duties rules
 backend/app/services/   scoring, clock (WAT), workflow, audit chain, evidence checks, users
-backend/app/routers/    API routes: health, auth, users, register (services, assets,
+backend/app/routers/    API routes: health, auth (+ recover), account (my profile, password,
+                        recovery code, sessions, activity), users, register (services, assets,
                         obligations, controls), risks (+ initial assessment),
                         treatment (decisions, actions, completion, reassessment,
                         acceptances), evidence (upload, list, download),

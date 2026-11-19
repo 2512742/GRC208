@@ -47,6 +47,10 @@ class UserDetail(UserSummary):
     display_timezone: str
     created_at: datetime
     last_login_at: datetime | None
+    must_change_password: bool = False
+    password_changed_at: datetime | None = None
+    has_recovery_code: bool = False
+    recovery_code_created_at: datetime | None = None
 
 
 class Me(UserDetail):

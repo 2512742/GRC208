@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlmodel import Session, col, func, select
+from sqlmodel import Session, func, select
 
 from app.core.auth import (
     CSRF_COOKIE,
@@ -25,10 +25,11 @@ from app.core.security import (
 )
 from app.core.timezones import DISPLAY_TIMEZONES
 from app.db import get_session
-from app.models import AuditLog, User, UserSession
+from app.models import User, UserSession
 from app.models.enums import AuditAction, Role
+from app.schemas.account import RecoverRequest
 from app.schemas.auth import LoginRequest, Me, PreferencesUpdate, TimezoneOption
-from app.services import audit
+from app.services import account, audit
 from app.services.clock import now_utc
 
 router = APIRouter(tags=["auth"])
@@ -50,27 +51,13 @@ def build_me(user: User, csrf_token: str) -> Me:
         display_timezone=user.display_timezone,
         created_at=user.created_at,
         last_login_at=user.last_login_at,
+        must_change_password=user.must_change_password,
+        password_changed_at=user.password_changed_at,
+        has_recovery_code=user.has_recovery_code,
+        recovery_code_created_at=user.recovery_code_created_at,
         permissions=sorted(p.value for p in role_permissions(Role(user.role))),
         csrf_token=csrf_token,
     )
-
-
-def _recent_failures(
-    db: Session, settings: Settings, *, username: str | None = None, ip: str | None = None
-) -> int:
-    since = now_utc() - timedelta(minutes=settings.login_lockout_minutes)
-    query = (
-        select(func.count())
-        .select_from(AuditLog)
-        .where(
-            AuditLog.action == AuditAction.LOGIN_FAILED.value, col(AuditLog.occurred_at) >= since
-        )
-    )
-    if username is not None:
-        query = query.where(AuditLog.username == username)
-    if ip is not None:
-        query = query.where(AuditLog.ip == ip)
-    return db.exec(query).one()
 
 
 def _set_cookies(response: Response, token: str, csrf: str, settings: Settings) -> None:
@@ -90,9 +77,7 @@ def login(
     settings: Settings = Depends(get_settings),
 ) -> Me:
     ip = client_ip(request, settings)
-    if _recent_failures(db, settings, username=body.username) >= settings.login_max_failures or (
-        ip and _recent_failures(db, settings, ip=ip) >= settings.login_max_failures_per_ip
-    ):
+    if account.is_throttled(db, settings, body.username, ip):
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
             TOO_MANY.format(minutes=settings.login_lockout_minutes),
@@ -153,6 +138,43 @@ def login(
     csrf = csrf_token_for(token, settings.secret_key.get_secret_value())
     _set_cookies(response, token, csrf, settings)
     return build_me(user, csrf)
+
+
+@router.post("/auth/recover", status_code=status.HTTP_204_NO_CONTENT)
+def recover(
+    body: RecoverRequest,
+    request: Request,
+    db: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> Response:
+    """Forgot password: set a new one with the one-time recovery code (there is no email).
+
+    Throttled together with sign-in; every rejection looks the same; success uses up the code
+    and ends all of the account's sessions. Then sign in normally.
+    """
+    ip = client_ip(request, settings)
+    if account.is_throttled(db, settings, body.username, ip):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            TOO_MANY.format(minutes=settings.login_lockout_minutes),
+        )
+    try:
+        account.reset_with_recovery_code(db, body.username, body.code, body.new_password, ip=ip)
+    except account.RecoveryRejected as exc:
+        db.rollback()
+        audit.record(
+            db,
+            AuditAction.LOGIN_FAILED,
+            audit.AuditActor(user_id=None, username=body.username, role=None, ip=ip),
+            detail="recovery code rejected",
+        )
+        db.commit()
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc)) from exc
+    except account.AccountError as exc:
+        db.rollback()  # valid code, weak password: the code stays usable
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)

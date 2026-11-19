@@ -570,6 +570,54 @@
         "title": "ActionUpdate",
         "type": "object"
       },
+      "ActivityOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "occurred_at",
+          "action",
+          "detail",
+          "ip"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AssessmentCreate": {
         "properties": {
           "impact": {
@@ -1348,6 +1396,22 @@
         "title": "Classification",
         "type": "string"
       },
+      "ConfirmPassword": {
+        "description": "Re-entering the password before a sensitive step (e.g. a new recovery code).",
+        "properties": {
+          "current_password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password"
+        ],
+        "title": "ConfirmPassword",
+        "type": "object"
+      },
       "ControlOut": {
         "properties": {
           "control_ref": {
@@ -1894,6 +1958,11 @@
             "title": "Full Name",
             "type": "string"
           },
+          "has_recovery_code": {
+            "default": false,
+            "title": "Has Recovery Code",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -1925,12 +1994,41 @@
             ],
             "title": "Last Login At"
           },
+          "must_change_password": {
+            "default": false,
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "password_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password Changed At"
+          },
           "permissions": {
             "items": {
               "type": "string"
             },
             "title": "Permissions",
             "type": "array"
+          },
+          "recovery_code_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Code Created At"
           },
           "role": {
             "$ref": "#/components/schemas/Role"
@@ -2231,6 +2329,28 @@
         "title": "Page[RiskSummary]",
         "type": "object"
       },
+      "PasswordChange": {
+        "properties": {
+          "current_password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChange",
+        "type": "object"
+      },
       "PersonRef": {
         "properties": {
           "full_name": {
@@ -2276,6 +2396,63 @@
           "display_timezone"
         ],
         "title": "PreferencesUpdate",
+        "type": "object"
+      },
+      "ProfileUpdate": {
+        "description": "What users may change about themselves (role and username stay with the admin).",
+        "properties": {
+          "department": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          }
+        },
+        "title": "ProfileUpdate",
         "type": "object"
       },
       "ReassessmentOut": {
@@ -2330,6 +2507,55 @@
           "evidence"
         ],
         "title": "ReassessmentOut",
+        "type": "object"
+      },
+      "RecoverRequest": {
+        "properties": {
+          "code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "New Password",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "code",
+          "new_password"
+        ],
+        "title": "RecoverRequest",
+        "type": "object"
+      },
+      "RecoveryCodeOut": {
+        "properties": {
+          "code": {
+            "description": "Shown once. Only a hash is stored.",
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "created_at"
+        ],
+        "title": "RecoveryCodeOut",
         "type": "object"
       },
       "Regime": {
@@ -2958,6 +3184,104 @@
         "title": "ScoreSummary",
         "type": "object"
       },
+      "SecurityOverview": {
+        "description": "The signed-in user's own security status (also the admin's view of an account).",
+        "properties": {
+          "active_sessions": {
+            "title": "Active Sessions",
+            "type": "integer"
+          },
+          "has_recovery_code": {
+            "title": "Has Recovery Code",
+            "type": "boolean"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "lockout_after_failures": {
+            "title": "Lockout After Failures",
+            "type": "integer"
+          },
+          "lockout_minutes": {
+            "title": "Lockout Minutes",
+            "type": "integer"
+          },
+          "must_change_password": {
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "password_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password Changed At"
+          },
+          "password_min_length": {
+            "title": "Password Min Length",
+            "type": "integer"
+          },
+          "recent_failed_sign_ins": {
+            "title": "Recent Failed Sign Ins",
+            "type": "integer"
+          },
+          "recovery_code_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Code Created At"
+          },
+          "session_hours": {
+            "title": "Session Hours",
+            "type": "integer"
+          },
+          "session_idle_minutes": {
+            "title": "Session Idle Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "must_change_password",
+          "password_changed_at",
+          "has_recovery_code",
+          "recovery_code_created_at",
+          "last_login_at",
+          "active_sessions",
+          "recent_failed_sign_ins",
+          "locked",
+          "lockout_minutes",
+          "lockout_after_failures",
+          "password_min_length",
+          "session_hours",
+          "session_idle_minutes"
+        ],
+        "title": "SecurityOverview",
+        "type": "object"
+      },
       "ServiceCreate": {
         "properties": {
           "code": {
@@ -3123,6 +3447,59 @@
           }
         },
         "title": "ServiceUpdate",
+        "type": "object"
+      },
+      "SessionOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "device": {
+            "title": "Device",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "last_seen_at": {
+            "format": "date-time",
+            "title": "Last Seen At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "device",
+          "ip",
+          "created_at",
+          "last_seen_at",
+          "expires_at",
+          "current"
+        ],
+        "title": "SessionOut",
         "type": "object"
       },
       "SettingsOut": {
@@ -3335,6 +3712,19 @@
         "title": "SettingsUpdate",
         "type": "object"
       },
+      "SignedOut": {
+        "properties": {
+          "sessions_ended": {
+            "title": "Sessions Ended",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sessions_ended"
+        ],
+        "title": "SignedOut",
+        "type": "object"
+      },
       "Strategy": {
         "enum": [
           "reduce",
@@ -3469,6 +3859,11 @@
             "title": "Full Name",
             "type": "string"
           },
+          "has_recovery_code": {
+            "default": false,
+            "title": "Has Recovery Code",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -3499,6 +3894,35 @@
               }
             ],
             "title": "Last Login At"
+          },
+          "must_change_password": {
+            "default": false,
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "password_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password Changed At"
+          },
+          "recovery_code_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Code Created At"
           },
           "role": {
             "$ref": "#/components/schemas/Role"
@@ -4727,6 +5151,41 @@
         ]
       }
     },
+    "/api/auth/recover": {
+      "post": {
+        "description": "Forgot password: set a new one with the one-time recovery code (there is no email).\n\nThrottled together with sign-in; every rejection looks the same; success uses up the code\nand ends all of the account's sessions. Then sign in normally.",
+        "operationId": "recover_api_auth_recover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recover",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/controls": {
       "get": {
         "operationId": "list_controls_api_controls_get",
@@ -5348,6 +5807,74 @@
         ]
       }
     },
+    "/api/me/activity": {
+      "get": {
+        "description": "The latest sign-ins, failed attempts and account changes, so users can spot misuse.",
+        "operationId": "my_activity_api_me_activity_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityOut"
+                  },
+                  "title": "Response My Activity Api Me Activity Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Activity",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/password": {
+      "post": {
+        "description": "Needs the current password. Other sessions end; this one stays signed in.",
+        "operationId": "change_password_api_me_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
     "/api/me/preferences": {
       "patch": {
         "operationId": "update_preferences_api_me_preferences_patch",
@@ -5386,6 +5913,230 @@
         "summary": "Update Preferences",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/me/profile": {
+      "patch": {
+        "operationId": "update_profile_api_me_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Profile",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/recovery-code": {
+      "delete": {
+        "operationId": "delete_recovery_code_api_me_recovery_code_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Recovery Code",
+        "tags": [
+          "my account"
+        ]
+      },
+      "post": {
+        "description": "A new one-time code, shown once; any earlier code stops working immediately.",
+        "operationId": "create_recovery_code_api_me_recovery_code_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Recovery Code",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/security": {
+      "get": {
+        "operationId": "my_security_api_me_security_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Security",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/sessions": {
+      "get": {
+        "operationId": "my_sessions_api_me_sessions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SessionOut"
+                  },
+                  "title": "Response My Sessions Api Me Sessions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Sessions",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/sessions/sign-out-others": {
+      "post": {
+        "operationId": "sign_out_others_api_me_sessions_sign_out_others_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sign Out Others",
+        "tags": [
+          "my account"
+        ]
+      }
+    },
+    "/api/me/sessions/{session_id}": {
+      "delete": {
+        "operationId": "sign_out_session_api_me_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign Out Session",
+        "tags": [
+          "my account"
         ]
       }
     },
@@ -7026,6 +7777,92 @@
           }
         },
         "summary": "Change User",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/{user_id}/security": {
+      "get": {
+        "description": "Account status for the admin: lockout, sessions, recovery code set (never the code).",
+        "operationId": "user_security_api_users__user_id__security_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "User Security",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/{user_id}/sign-out-everywhere": {
+      "post": {
+        "description": "End every session of an account, e.g. after a lost phone or a suspected compromise.",
+        "operationId": "sign_out_everywhere_api_users__user_id__sign_out_everywhere_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign Out Everywhere",
         "tags": [
           "users"
         ]

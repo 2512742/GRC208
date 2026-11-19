@@ -81,7 +81,7 @@ export function StatTile({
 }) {
   const body = (
     <>
-      <div className="label-caps text-[11px] leading-tight sm:text-xs">{label}</div>
+      <div className="label-caps hyphens-auto break-words text-[10px] leading-tight sm:text-xs">{label}</div>
       <div
         className={cx(
           "mono-data mt-1.5 text-2xl font-bold sm:mt-2 sm:text-3xl",
@@ -341,7 +341,8 @@ export function DataTable<T>({
   if (rows.length === 0) return <EmptyState title={typeof empty === "string" ? empty : "Nothing to show."} />;
   return (
     <>
-      <div className="hidden overflow-x-auto md:block">
+      {/* Wide screens (and print): a table that wraps text instead of scrolling sideways. */}
+      <div className="hidden xl:block print:!block">
         <table className="table-base">
           {caption && <caption className="sr-only">{caption}</caption>}
           <thead>
@@ -370,7 +371,8 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      <ul className="flex flex-col gap-3 md:hidden" aria-label={caption}>
+      {/* Phones and tablets: Guardian mob-cards (two columns on tablets), never a sideways scroll. */}
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:hidden print:!hidden" aria-label={caption}>
         {rows.map((row) => (
           <li
             key={rowKey(row)}

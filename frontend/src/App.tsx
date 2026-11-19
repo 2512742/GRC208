@@ -5,6 +5,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { Loading } from "./components/ui";
 import { AppShell } from "./layout/AppShell";
+import { ForcedPasswordPage } from "./pages/ForcedPasswordPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage, ForbiddenPage } from "./pages/NotFoundPage";
 
@@ -21,12 +22,14 @@ const AuditPage = lazy(() => import("./pages/AuditPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const KitchenSinkPage = lazy(() => import("./pages/KitchenSinkPage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { me, loading } = useAuth();
   const location = useLocation();
   if (loading) return <Loading label="Checking your session…" />;
   if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  if (me.must_change_password) return <ForcedPasswordPage />;
   return <>{children}</>;
 }
 
@@ -65,6 +68,7 @@ export function App() {
           <Route path="actions" element={<ActionsPage />} />
           <Route path="approvals" element={<ApprovalsPage />} />
           <Route path="assets" element={<AssetsPage />} />
+          <Route path="account" element={<AccountPage />} />
           <Route
             path="reports"
             element={

@@ -44,6 +44,7 @@ def create_user(
     email: str | None = None,
     job_title: str | None = None,
     department: str | None = None,
+    must_change_password: bool = False,
     by: audit.AuditActor = audit.SYSTEM,
 ) -> User:
     username = username.strip().lower()
@@ -60,6 +61,7 @@ def create_user(
         job_title=job_title,
         department=department,
         password_hash=hash_password(password),
+        must_change_password=must_change_password,
     )
     session.add(user)
     session.flush()

@@ -5,7 +5,8 @@ import { api } from "../api/client";
 import { useSettings } from "../api/queries";
 import type { SettingsOut } from "../api/types";
 import { useToast } from "../components/Toast";
-import { Card, DateTime, ErrorState, Loading, Notice, PageHeader, TextField } from "../components/ui";
+import { Card, DateTime, ErrorState, KeyValue, Loading, Notice, PageHeader, TextField } from "../components/ui";
+import { useSecurity } from "./AccountPage";
 
 type Key = Exclude<keyof SettingsOut, "updated_at" | "updated_by" | "org_timezone">;
 
@@ -104,11 +105,36 @@ export default function SettingsPage() {
           </Card>
         ))}
         <div>
-          <button type="submit" className="btn-primary" disabled={!dirty || save.isPending}>
+          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={!dirty || save.isPending}>
             {save.isPending ? "Saving…" : "Save settings"}
           </button>
         </div>
       </form>
+      <SecurityPolicy />
     </>
+  );
+}
+
+/** Read-only: these come from the server configuration (.env), not from the database. */
+function SecurityPolicy() {
+  const q = useSecurity();
+  if (!q.data) return null;
+  const p = q.data;
+  return (
+    <Card title="Account security policy" className="mt-6 max-w-3xl">
+      <KeyValue
+        items={[
+          ["Password", `At least ${p.password_min_length} characters and 5 different ones, not containing the username; Argon2 hashed`],
+          ["Sign-in lockout", `${p.lockout_after_failures} failed attempts (passwords or recovery codes) pause sign-in for ${p.lockout_minutes} minutes`],
+          ["Sessions", `Up to ${p.session_hours} hours; end after ${p.session_idle_minutes} minutes idle; HttpOnly cookie with CSRF protection`],
+          ["Password recovery", "One-time recovery code per user (no email); otherwise an administrator sets a temporary password that must be changed at next sign-in"],
+          ["Lost administrator password", "python -m app.cli reset-password --username <name> on the server"],
+        ]}
+      />
+      <p className="mt-3 text-xs text-muted">
+        Changed through the server's environment (SESSION_HOURS, SESSION_IDLE_MINUTES, LOGIN_MAX_FAILURES,
+        LOGIN_LOCKOUT_MINUTES), not here, so a compromised admin account can't weaken them.
+      </p>
+    </Card>
   );
 }

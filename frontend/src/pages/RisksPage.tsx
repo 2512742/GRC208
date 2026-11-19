@@ -68,7 +68,7 @@ export default function RisksPage() {
         </Link>
       ),
     },
-    { key: "title", header: "Risk", render: (r) => <span className="font-medium">{r.title}</span>, className: "min-w-[16rem]" },
+    { key: "title", header: "Risk", render: (r) => <span className="font-medium">{r.title}</span>, className: "w-[30%]" },
     { key: "score", header: "Current score", render: (r) => <ScoreBadge score={r.current} />, hideOnMobile: true },
     {
       key: "original",

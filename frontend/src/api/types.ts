@@ -78,3 +78,9 @@ export type ServiceLine = {
 };
 
 export type ExposureLine = { regime: string; risks: number; above_appetite: number };
+
+export type SecurityOverview = S["SecurityOverview"];
+export type SessionOut = S["SessionOut"];
+export type ActivityOut = S["ActivityOut"];
+export type RecoveryCodeOut = S["RecoveryCodeOut"];
+export type SignedOut = S["SignedOut"];

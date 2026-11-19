@@ -121,7 +121,7 @@ html.dark {
     @apply label-caps border-b border-line px-1.5 py-2 align-bottom text-[10px] sm:px-3 sm:text-xs;
   }
   .table-base td {
-    @apply border-b border-line px-1.5 py-2 align-top sm:px-3;
+    @apply break-words border-b border-line px-1.5 py-2 align-top sm:px-3;
   }
   .table-base th:first-child,
   .table-base td:first-child {

@@ -45,7 +45,7 @@ export function TimezoneSelect({ compact, onDark }: { compact?: boolean; onDark?
     o.value === "system" ? { ...o, label: `System (${deviceZone()})` } : o,
   );
   return (
-    <label className="flex items-center gap-2">
+    <label className="flex min-w-0 items-center gap-2">
       <span className={compact ? "sr-only" : cx("label-caps hidden whitespace-nowrap xl:inline", onDark && "text-white/70")}>
         Times in
       </span>

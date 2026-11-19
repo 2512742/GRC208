@@ -41,7 +41,7 @@ export default function DashboardPage() {
         actions={
           <select
             aria-label="Filter by business service"
-            className="input w-auto"
+            className="input w-full min-w-0 sm:w-auto"
             value={serviceId}
             onChange={(e) => {
               setServiceId(e.target.value);
@@ -146,28 +146,21 @@ export default function DashboardPage() {
               })}
           </ul>
           <div className="label-caps mb-2 mt-6">By service</div>
-          <table className="table-base">
-            <thead>
-              <tr>
-                <th>Service</th>
-                <th className="text-right">Risks</th>
-                <th className="text-right">Above</th>
-                <th className="text-right">Highest</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byService.map((s) => (
-                <tr key={s.code}>
-                  <td>
-                    <span className="mono-data">{s.code}</span> {s.name}
-                  </td>
-                  <td className="mono-data text-right">{s.risks}</td>
-                  <td className="mono-data text-right">{s.above_appetite}</td>
-                  <td className="mono-data text-right">{s.highest_score ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="divide-y divide-line border-y border-line">
+            {byService.map((s) => (
+              <li key={s.code} className="py-2.5">
+                <div className="font-medium">
+                  <span className="mono-data mr-1.5">{s.code}</span>
+                  {s.name}
+                </div>
+                <dl className="mt-1 grid grid-cols-3 gap-2 text-xs">
+                  <Figure label="Risks" value={s.risks} />
+                  <Figure label="Above appetite" value={s.above_appetite} alert={s.above_appetite > 0} />
+                  <Figure label="Highest score" value={s.highest_score ?? "—"} />
+                </dl>
+              </li>
+            ))}
+          </ul>
         </Card>
       </div>
 
@@ -268,24 +261,17 @@ export default function DashboardPage() {
         </Card>
 
         <Card title="Regulatory exposure">
-          <table className="table-base">
-            <thead>
-              <tr>
-                <th>Regime</th>
-                <th className="text-right">Linked risks</th>
-                <th className="text-right">Above appetite</th>
-              </tr>
-            </thead>
-            <tbody>
-              {exposure.map((e) => (
-                <tr key={e.regime}>
-                  <td className="mono-data">{e.regime}</td>
-                  <td className="mono-data text-right">{e.risks}</td>
-                  <td className="mono-data text-right">{e.above_appetite}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="divide-y divide-line border-y border-line">
+            {exposure.map((e) => (
+              <li key={e.regime} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="mono-data font-semibold">{e.regime}</span>
+                <dl className="grid grid-cols-2 gap-4 text-right text-xs">
+                  <Figure label="Linked risks" value={e.risks} />
+                  <Figure label="Above appetite" value={e.above_appetite} alert={e.above_appetite > 0} />
+                </dl>
+              </li>
+            ))}
+          </ul>
           <p className="mt-2 text-xs text-muted">
             Awaiting reassessment: {totals.awaiting_reassessment} risk
             {totals.awaiting_reassessment === 1 ? "" : "s"}.
@@ -293,5 +279,14 @@ export default function DashboardPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+function Figure({ label, value, alert }: { label: string; value: number | string; alert?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] font-bold uppercase leading-tight tracking-[0.07em] text-muted">{label}</dt>
+      <dd className={`mono-data mt-0.5 text-base font-bold ${alert ? "text-danger" : ""}`}>{value}</dd>
+    </div>
   );
 }

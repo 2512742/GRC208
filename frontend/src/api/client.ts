@@ -110,6 +110,8 @@ export const api = {
   post: <T>(path: string, json?: unknown) => request<T>("POST", path, { json: json ?? {} }),
   patch: <T>(path: string, json: unknown) => request<T>("PATCH", path, { json }),
   upload: <T>(path: string, form: FormData) => request<T>("POST", path, { form }),
+  /** DELETE, optionally with a JSON body (e.g. a password confirmation). */
+  remove: <T>(path: string, json?: unknown) => request<T>("DELETE", path, json === undefined ? {} : { json }),
 };
 
 /** Downloads go through fetch (so the CSRF/session rules stay identical), then a blob link. */

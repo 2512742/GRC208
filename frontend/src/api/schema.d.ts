@@ -248,6 +248,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recover
+         * @description Forgot password: set a new one with the one-time recovery code (there is no email).
+         *
+         *     Throttled together with sign-in; every rejection looks the same; success uses up the code
+         *     and ends all of the account's sessions. Then sign in normally.
+         */
+        post: operations["recover_api_auth_recover_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/controls": {
         parameters: {
             query?: never;
@@ -459,6 +482,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Activity
+         * @description The latest sign-ins, failed attempts and account changes, so users can spot misuse.
+         */
+        get: operations["my_activity_api_me_activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Password
+         * @description Needs the current password. Other sessions end; this one stays signed in.
+         */
+        post: operations["change_password_api_me_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/preferences": {
         parameters: {
             query?: never;
@@ -474,6 +537,112 @@ export interface paths {
         head?: never;
         /** Update Preferences */
         patch: operations["update_preferences_api_me_preferences_patch"];
+        trace?: never;
+    };
+    "/api/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Profile */
+        patch: operations["update_profile_api_me_profile_patch"];
+        trace?: never;
+    };
+    "/api/me/recovery-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Recovery Code
+         * @description A new one-time code, shown once; any earlier code stops working immediately.
+         */
+        post: operations["create_recovery_code_api_me_recovery_code_post"];
+        /** Delete Recovery Code */
+        delete: operations["delete_recovery_code_api_me_recovery_code_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Security */
+        get: operations["my_security_api_me_security_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Sessions */
+        get: operations["my_sessions_api_me_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sessions/sign-out-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Out Others */
+        post: operations["sign_out_others_api_me_sessions_sign_out_others_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Sign Out Session */
+        delete: operations["sign_out_session_api_me_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/obligations": {
@@ -789,6 +958,46 @@ export interface paths {
         patch: operations["change_user_api_users__user_id__patch"];
         trace?: never;
     };
+    "/api/users/{user_id}/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * User Security
+         * @description Account status for the admin: lockout, sessions, recovery code set (never the code).
+         */
+        get: operations["user_security_api_users__user_id__security_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{user_id}/sign-out-everywhere": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign Out Everywhere
+         * @description End every session of an account, e.g. after a lost phone or a suspected compromise.
+         */
+        post: operations["sign_out_everywhere_api_users__user_id__sign_out_everywhere_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -965,6 +1174,22 @@ export interface components {
             status?: ("in_progress" | "cancelled") | null;
             /** Title */
             title?: string | null;
+        };
+        /** ActivityOut */
+        ActivityOut: {
+            /** Action */
+            action: string;
+            /** Detail */
+            detail: string | null;
+            /** Id */
+            id: number;
+            /** Ip */
+            ip: string | null;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
         };
         /** AssessmentCreate */
         AssessmentCreate: {
@@ -1223,6 +1448,14 @@ export interface components {
          * @enum {string}
          */
         Classification: "public" | "internal" | "confidential" | "restricted";
+        /**
+         * ConfirmPassword
+         * @description Re-entering the password before a sensitive step (e.g. a new recovery code).
+         */
+        ConfirmPassword: {
+            /** Current Password */
+            current_password: string;
+        };
         /** ControlOut */
         ControlOut: {
             /** Control Ref */
@@ -1412,6 +1645,11 @@ export interface components {
             email: string | null;
             /** Full Name */
             full_name: string;
+            /**
+             * Has Recovery Code
+             * @default false
+             */
+            has_recovery_code: boolean;
             /** Id */
             id: number;
             /** Is Active */
@@ -1420,8 +1658,17 @@ export interface components {
             job_title: string | null;
             /** Last Login At */
             last_login_at: string | null;
+            /**
+             * Must Change Password
+             * @default false
+             */
+            must_change_password: boolean;
+            /** Password Changed At */
+            password_changed_at?: string | null;
             /** Permissions */
             permissions: string[];
+            /** Recovery Code Created At */
+            recovery_code_created_at?: string | null;
             role: components["schemas"]["Role"];
             /** Username */
             username: string;
@@ -1525,6 +1772,13 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** PasswordChange */
+        PasswordChange: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
+        };
         /** PersonRef */
         PersonRef: {
             /** Full Name */
@@ -1540,6 +1794,20 @@ export interface components {
         PreferencesUpdate: {
             /** Display Timezone */
             display_timezone: string;
+        };
+        /**
+         * ProfileUpdate
+         * @description What users may change about themselves (role and username stay with the admin).
+         */
+        ProfileUpdate: {
+            /** Department */
+            department?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Full Name */
+            full_name?: string | null;
+            /** Job Title */
+            job_title?: string | null;
         };
         /** ReassessmentOut */
         ReassessmentOut: {
@@ -1558,6 +1826,28 @@ export interface components {
             risk_status: string;
             /** Score */
             score: number;
+        };
+        /** RecoverRequest */
+        RecoverRequest: {
+            /** Code */
+            code: string;
+            /** New Password */
+            new_password: string;
+            /** Username */
+            username: string;
+        };
+        /** RecoveryCodeOut */
+        RecoveryCodeOut: {
+            /**
+             * Code
+             * @description Shown once. Only a hash is stored.
+             */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * Regime
@@ -1756,6 +2046,38 @@ export interface components {
             /** Score */
             score: number;
         };
+        /**
+         * SecurityOverview
+         * @description The signed-in user's own security status (also the admin's view of an account).
+         */
+        SecurityOverview: {
+            /** Active Sessions */
+            active_sessions: number;
+            /** Has Recovery Code */
+            has_recovery_code: boolean;
+            /** Last Login At */
+            last_login_at: string | null;
+            /** Locked */
+            locked: boolean;
+            /** Lockout After Failures */
+            lockout_after_failures: number;
+            /** Lockout Minutes */
+            lockout_minutes: number;
+            /** Must Change Password */
+            must_change_password: boolean;
+            /** Password Changed At */
+            password_changed_at: string | null;
+            /** Password Min Length */
+            password_min_length: number;
+            /** Recent Failed Sign Ins */
+            recent_failed_sign_ins: number;
+            /** Recovery Code Created At */
+            recovery_code_created_at: string | null;
+            /** Session Hours */
+            session_hours: number;
+            /** Session Idle Minutes */
+            session_idle_minutes: number;
+        };
         /** ServiceCreate */
         ServiceCreate: {
             /** Code */
@@ -1800,6 +2122,32 @@ export interface components {
             name?: string | null;
             /** Owner Id */
             owner_id?: number | null;
+        };
+        /** SessionOut */
+        SessionOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current */
+            current: boolean;
+            /** Device */
+            device: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: number;
+            /** Ip */
+            ip: string | null;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
         };
         /** SettingsOut */
         SettingsOut: {
@@ -1854,6 +2202,11 @@ export interface components {
             /** Sla Days Medium */
             sla_days_medium?: number | null;
         };
+        /** SignedOut */
+        SignedOut: {
+            /** Sessions Ended */
+            sessions_ended: number;
+        };
         /**
          * Strategy
          * @enum {string}
@@ -1897,6 +2250,11 @@ export interface components {
             email: string | null;
             /** Full Name */
             full_name: string;
+            /**
+             * Has Recovery Code
+             * @default false
+             */
+            has_recovery_code: boolean;
             /** Id */
             id: number;
             /** Is Active */
@@ -1905,6 +2263,15 @@ export interface components {
             job_title: string | null;
             /** Last Login At */
             last_login_at: string | null;
+            /**
+             * Must Change Password
+             * @default false
+             */
+            must_change_password: boolean;
+            /** Password Changed At */
+            password_changed_at?: string | null;
+            /** Recovery Code Created At */
+            recovery_code_created_at?: string | null;
             role: components["schemas"]["Role"];
             /** Username */
             username: string;
@@ -2480,6 +2847,37 @@ export interface operations {
             };
         };
     };
+    recover_api_auth_recover_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_controls_api_controls_get: {
         parameters: {
             query?: {
@@ -2865,6 +3263,59 @@ export interface operations {
             };
         };
     };
+    my_activity_api_me_activity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"][];
+                };
+            };
+        };
+    };
+    change_password_api_me_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_preferences_api_me_preferences_patch: {
         parameters: {
             query?: never;
@@ -2885,6 +3336,194 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_api_me_profile_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_recovery_code_api_me_recovery_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_recovery_code_api_me_recovery_code_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_security_api_me_security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityOverview"];
+                };
+            };
+        };
+    };
+    my_sessions_api_me_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"][];
+                };
+            };
+        };
+    };
+    sign_out_others_api_me_sessions_sign_out_others_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedOut"];
+                };
+            };
+        };
+    };
+    sign_out_session_api_me_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedOut"];
                 };
             };
             /** @description Validation Error */
@@ -3732,6 +4371,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    user_security_api_users__user_id__security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_out_everywhere_api_users__user_id__sign_out_everywhere_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedOut"];
                 };
             };
             /** @description Validation Error */

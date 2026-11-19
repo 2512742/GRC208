@@ -15,7 +15,18 @@ from app.core.config import get_settings
 from app.core.headers import SecurityHeadersMiddleware
 from app.core.logging import configure_logging
 from app.frontend import mount_frontend
-from app.routers import admin, auth, evidence, health, register, reports, risks, treatment, users
+from app.routers import (
+    account,
+    admin,
+    auth,
+    evidence,
+    health,
+    register,
+    reports,
+    risks,
+    treatment,
+    users,
+)
 
 API_PREFIX = "/api"
 
@@ -35,6 +46,7 @@ def create_app() -> FastAPI:
     application.add_middleware(SecurityHeadersMiddleware, hsts=not settings.debug)
     application.include_router(health.router, prefix=API_PREFIX)
     application.include_router(auth.router, prefix=API_PREFIX)
+    application.include_router(account.router, prefix=API_PREFIX)
     application.include_router(users.router, prefix=API_PREFIX)
     application.include_router(register.router, prefix=API_PREFIX)
     application.include_router(risks.router, prefix=API_PREFIX)

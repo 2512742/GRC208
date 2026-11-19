@@ -22,6 +22,10 @@ export function person(role: Me["role"], permissions: string[], id = 7): Me {
     last_login_at: null,
     permissions,
     csrf_token: "x",
+    must_change_password: false,
+    password_changed_at: null,
+    has_recovery_code: false,
+    recovery_code_created_at: null,
   };
 }
 

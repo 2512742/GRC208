@@ -8,7 +8,7 @@ import type { Overview, Totals } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { ScoreBadge, StatusChip } from "../components/risk";
 import { useToast } from "../components/Toast";
-import { ErrorState, Loading, PageHeader } from "../components/ui";
+import { DataTable, ErrorState, Loading, PageHeader } from "../components/ui";
 import { BANDS, compactNaira, titleCase } from "../lib/format";
 import { formatDate, formatDateTime, zoneAbbreviation } from "../lib/time";
 
@@ -109,46 +109,34 @@ export default function ReportsPage() {
               ["Awaiting reassessment", totals.awaiting_reassessment],
               ["Reviews due", totals.reviews_due],
             ].map(([label, value]) => (
-              <div key={label} className="border border-line p-2">
-                <div className="label-caps text-[10px]">{label}</div>
+              <div key={label} className="min-w-0 border border-line p-2">
+                <div className="label-caps hyphens-auto break-words text-[10px] leading-tight">{label}</div>
                 <div className="mono-data text-lg font-bold">{value}</div>
               </div>
             ))}
           </section>
           <section className="mt-6">
             <h3 className="label-caps mb-2 text-ink">Risks ({q.data.risks?.length ?? 0})</h3>
-            <div className="overflow-x-auto">
-              <table className="table-base text-xs">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Risk</th>
-                    <th>Score</th>
-                    <th>Owner</th>
-                    <th>Status</th>
-                    <th>Strategy</th>
-                    <th>Next review</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(q.data.risks ?? []).map((r) => (
-                    <tr key={r.id}>
-                      <td className="mono-data">{r.risk_code}</td>
-                      <td>{r.title}</td>
-                      <td>
-                        <ScoreBadge score={r.current} />
-                      </td>
-                      <td>{r.owner.full_name}</td>
-                      <td>
-                        <StatusChip status={r.display_status} />
-                      </td>
-                      <td>{titleCase(r.strategy)}</td>
-                      <td className="whitespace-nowrap">{formatDate(r.next_review_date)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              caption="Risks in this report"
+              rows={q.data.risks ?? []}
+              rowKey={(r) => r.id}
+              mobileHeader={(r) => (
+                <div className="flex flex-col items-start gap-1.5">
+                  <span className="mono-data font-semibold">{r.risk_code}</span>
+                  <ScoreBadge score={r.current} />
+                </div>
+              )}
+              columns={[
+                { key: "id", header: "ID", render: (r) => <span className="mono-data">{r.risk_code}</span>, hideOnMobile: true },
+                { key: "title", header: "Risk", render: (r) => r.title, className: "w-[30%]" },
+                { key: "score", header: "Score", render: (r) => <ScoreBadge score={r.current} />, hideOnMobile: true },
+                { key: "owner", header: "Owner", render: (r) => r.owner.full_name },
+                { key: "status", header: "Status", render: (r) => <StatusChip status={r.display_status} /> },
+                { key: "strategy", header: "Strategy", render: (r) => titleCase(r.strategy) },
+                { key: "review", header: "Next review", render: (r) => formatDate(r.next_review_date) },
+              ]}
+            />
           </section>
           {q.data.overdue_actions.length > 0 && (
             <section className="mt-6">

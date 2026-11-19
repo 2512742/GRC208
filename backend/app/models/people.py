@@ -32,6 +32,17 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=now_utc, sa_type=UTCDateTime, nullable=False)
     last_login_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    # Account security (borrowed from the Sentinel project; there is no email in this system):
+    # a password set by an administrator must be replaced at the next sign-in, and a user may
+    # keep one self-service recovery code (stored only as a hash, usable once).
+    must_change_password: bool = Field(default=False)
+    password_changed_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    recovery_code_hash: str | None = Field(default=None, max_length=255)
+    recovery_code_created_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+
+    @property
+    def has_recovery_code(self) -> bool:
+        return self.recovery_code_hash is not None
 
 
 class UserSession(SQLModel, table=True):
