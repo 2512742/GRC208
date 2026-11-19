@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (backend complete (phases P0 to P6): every brief feature is available through the API; the React frontend is next). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **feature-complete, not yet deployed.** Backend (phases P0 to P6) and the React web app (U0 to U4, installable as an app) are built and tested on SQLite and PostgreSQL 18. Next: hosting on Vercel with Neon (P7). The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
