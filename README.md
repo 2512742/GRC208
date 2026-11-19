@@ -2,11 +2,11 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (phase P0 Foundations complete). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **in development** (phases P0 Foundations and P1 Database complete). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
-- **Backend:** Python 3.12+ (3.13 locally), FastAPI, SQLModel/SQLAlchemy 2, Alembic *(later)*
+- **Backend:** Python 3.12+ (3.13 locally), FastAPI, SQLModel/SQLAlchemy 2, Alembic
 - **Database:** SQLite by default; PostgreSQL (Neon) when hosted
 - **Frontend:** React + Vite + TypeScript + Tailwind *(later)*
 - **Hosting:** Vercel (API as a Python function, region `cle1`) + Neon PostgreSQL (us-east-2)
@@ -29,13 +29,19 @@ python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 
-# 3. Run
+# 3. Database (local SQLite file backend/risktrack.sqlite3)
+alembic upgrade head
+python -m app.cli load-reference
+
+# 4. Run
 uvicorn app.main:app --reload
 ```
 
 Open http://127.0.0.1:8000/api/health (expect `"status": "ok"`) and the interactive API docs at http://127.0.0.1:8000/api/docs.
 
-Database setup, demo data and demo accounts *(later: `alembic upgrade head` and `python -m app.cli seed-demo`)*.
+Demo data and demo accounts *(later: `python -m app.cli seed-demo`)*.
+
+> If your `.env` sets `DATABASE_URL`, these commands act on **that** database. CLI commands print the target and ask before touching a remote one.
 
 ## Tests and checks
 
@@ -75,7 +81,7 @@ All settings come from environment variables or `.env` (real environment variabl
 Owned and run by the technical lead. Summary *(full steps later)*:
 
 1. In Vercel, import the GitHub repository; set the environment variables above for Production (pooled Neon URL as `DATABASE_URL`, a new random `SECRET_KEY`).
-2. Run migrations from a developer machine against `DATABASE_URL_DIRECT` *(later)*.
+2. From a developer machine whose `.env` holds the Neon URLs: `alembic upgrade head`, then `python -m app.cli load-reference` (migrations use `DATABASE_URL_DIRECT`).
 3. Deploy `main`; check `https://<project>.vercel.app/api/health`.
 
 Secrets live only in `.env` (git-ignored) and in Vercel's settings. If a connection string is ever exposed, reset the password in Neon.
@@ -87,6 +93,10 @@ api/index.py            Vercel entry point (imports the FastAPI app)
 backend/app/main.py     FastAPI application factory
 backend/app/core/       settings, security headers, logging
 backend/app/db.py       database engine (SQLite / PostgreSQL)
+backend/app/models/     tables (SQLModel) with database-level rules
+backend/app/reference/  framework controls and regulatory obligations catalogue
+backend/app/cli.py      management commands (python -m app.cli --help)
+backend/alembic/        migrations
 backend/app/routers/    API routes (currently: health)
 backend/tests/          pytest suite
 vercel.json             Vercel config (region, rewrites)
