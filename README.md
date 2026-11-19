@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **feature-complete, not yet deployed.** Backend (phases P0 to P6) and the React web app (U0 to U4, installable as an app) are built and tested on SQLite and PostgreSQL 18. Next: hosting on Vercel with Neon (P7). The full plan is in the project folder's `PLAN.md`.
+> Status: **live at https://thealajo.tinex.tech** (team lead's shared VPS, SQLite). Backend (phases P0 to P6) and the React web app (U0 to U4, installable as an app) are built and tested on SQLite and PostgreSQL 18. The hosted demo password is not the one below; it is shared privately. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
@@ -182,9 +182,13 @@ All settings come from environment variables or `.env` (real environment variabl
 | `LOGIN_MAX_FAILURES` / `LOGIN_LOCKOUT_MINUTES` | no | `5` / `15` | Per-username sign-in lockout |
 | `TRUST_PROXY_HEADERS` | no | `false` | Use `X-Forwarded-For` for client IPs (automatic on Vercel; set `true` behind a VPS reverse proxy) |
 
-## Deployment (Vercel + Neon)
+## Deployment
 
-Owned and run by the technical lead. Summary *(full steps later)*:
+**Live:** https://thealajo.tinex.tech, on the team lead's shared VPS (Docker Compose behind the server's shared Caddy, which provides HTTPS; SQLite in a Docker volume; daily backups). Setup, updates and removal: [`deploy/vps/README.md`](deploy/vps/README.md). Owned and run by the technical lead.
+
+### Alternative: Vercel + Neon
+
+Kept ready in case the VPS is unavailable:
 
 1. In Vercel, import the GitHub repository; set the environment variables above for Production (pooled Neon URL as `DATABASE_URL`, a new random `SECRET_KEY`).
 2. From a developer machine whose `.env` holds the Neon URLs: `alembic upgrade head`, then `python -m app.cli load-reference` (migrations use `DATABASE_URL_DIRECT`).
