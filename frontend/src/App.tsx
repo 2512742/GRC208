@@ -46,7 +46,10 @@ export function App() {
     <Suspense fallback={<Loading />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/index.html" element={<Navigate to="/" replace />} />
+        {/* Common guesses for the home screen (other apps use /dashboard). */}
+        {["/index.html", "/dashboard", "/home"].map((path) => (
+          <Route key={path} path={path} element={<Navigate to="/" replace />} />
+        ))}
         <Route path="/kitchen-sink" element={<KitchenSinkPage />} />
         <Route
           element={
