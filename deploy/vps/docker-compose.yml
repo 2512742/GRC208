@@ -1,0 +1,23 @@
+# Run from ~/apps/risktrack on the shared VPS (see deploy/vps/README.md).
+# Reachable only on the Docker host gateway, i.e. through the shared Caddy; never 0.0.0.0.
+name: risktrack
+services:
+  app:
+    build:
+      context: .
+      dockerfile: deploy/vps/Dockerfile
+    image: risktrack:latest
+    restart: unless-stopped
+    env_file: .env # chmod 600; created on the server, never committed or printed
+    ports:
+      - "172.17.0.1:9120:8080"
+    volumes:
+      - risktrack_data:/app/backend/data
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  risktrack_data: {}

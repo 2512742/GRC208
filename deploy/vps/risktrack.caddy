@@ -1,0 +1,8 @@
+# Copy of ~/WaterCheck/infra/sites/risktrack.caddy on the shared VPS. The app sets its own
+# security headers (CSP, HSTS, frame denial); Caddy only adds HTTPS, compression and hides
+# its name.
+thealajo.tinex.tech {
+	encode zstd gzip
+	header -Server
+	reverse_proxy host.docker.internal:9120
+}
