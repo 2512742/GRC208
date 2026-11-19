@@ -1,0 +1,10 @@
+asset_code,name,asset_type,service_code,owner_username,classification,obligations,description
+,Treasury bill auction connector,third_party_service,S2,anita,restricted,SEC-01,Valid row: will be created
+,Card tokenisation vault,mainframe,S1,emmanuel,restricted,PCI-03,Wrong asset_type
+,,api,S1,emmanuel,internal,,Missing name
+,Partner bank settlement API,api,S9,emmanuel,restricted,CBN-02,Unknown service S9
+,Wallet ledger,database,S1,emmanuel,restricted,,Already exists in S1 (duplicate)
+,Treasury bill auction connector,third_party_service,S2,anita,restricted,,Repeats row 2 of this file (duplicate)
+,Chatbot assistant,saas,S3,nobody,confidential,,Unknown owner
+,USSD gateway,api,S3,gilbert,confidential,NDPA-99,Unknown obligation reference
+A-007,Some other app,application,S2,anita,internal,,asset_code A-007 already used (duplicate)

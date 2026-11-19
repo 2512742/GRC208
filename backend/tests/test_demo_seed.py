@@ -43,17 +43,6 @@ def count(db: Session, model: type) -> int:
     return db.exec(select(func.count()).select_from(model)).one()
 
 
-@pytest.fixture
-def seeded(db: Session) -> Session:
-    if count(db, Risk):
-        pytest.skip("database already holds risks")
-    # Entries committed by other tests (e.g. the CLI tests) may already exist: remember where
-    # the seed's own entries start.
-    db.info["audit_before_seed"] = db.exec(select(func.max(AuditLog.id))).one() or 0
-    seed_demo(db, DEMO_PASSWORD)
-    return db
-
-
 def test_sample_files_are_valid_import_rows() -> None:
     assert len(read_rows(SAMPLE_DIR / "alajo_assets.csv", AssetRow)) == 18
     assert len(read_rows(SAMPLE_DIR / "alajo_risks.csv", RiskRow)) == 22
@@ -190,7 +179,7 @@ def test_ciso_owned_pending_request_only_the_cro_may_decide(seeded: Session) -> 
 
 
 def test_seeded_audit_log_is_chronological(seeded: Session) -> None:
-    first = seeded.info["audit_before_seed"]
+    first = seeded.connection().info["audit_before_seed"]
     times = list(
         seeded.exec(
             select(AuditLog.occurred_at).where(AuditLog.id > first).order_by(col(AuditLog.id))

@@ -190,3 +190,51 @@ def sign_in(client: TestClient, username: str, password: str = DEMO_PASSWORD) ->
     token = response.json()["csrf_token"]
     client.headers["X-CSRF-Token"] = token
     return token
+
+
+# ── Seeded fixtures (P6): The Alajo seeded once per test module ────────────────────────────
+
+
+@pytest.fixture(scope="module")
+def seeded_connection(migrated_engine: Engine) -> Iterator[Connection]:
+    """One connection per module, The Alajo seeded inside an outer transaction that is rolled
+    back when the module finishes. Seeding once (not per test) keeps Neon runs practical."""
+    from sqlmodel import func, select
+
+    from app.models import AuditLog, Risk
+    from app.services.demo_seed import seed_demo
+
+    with migrated_engine.connect() as conn:
+        outer = conn.begin()
+        with Session(bind=conn, join_transaction_mode="create_savepoint") as session:
+            if session.exec(select(func.count()).select_from(Risk)).one():
+                pytest.skip("test database already holds risks")
+            conn.info["audit_before_seed"] = session.exec(select(func.max(AuditLog.id))).one() or 0
+            seed_demo(session, DEMO_PASSWORD)
+            session.commit()  # releases into the outer transaction only
+        try:
+            yield conn
+        finally:
+            outer.rollback()
+
+
+@pytest.fixture
+def seeded(seeded_connection: Connection) -> Iterator[Session]:
+    """Session on the seeded data; everything a test writes (even API commits) is undone."""
+    savepoint = seeded_connection.begin_nested()
+    with Session(bind=seeded_connection, join_transaction_mode="create_savepoint") as session:
+        try:
+            yield session
+        finally:
+            session.close()
+            savepoint.rollback()
+
+
+@pytest.fixture
+def seeded_api(seeded: Session) -> Iterator[TestClient]:
+    from app.db import get_session
+
+    application = create_app()
+    application.dependency_overrides[get_session] = lambda: seeded
+    with TestClient(application, base_url="https://testserver") as test_client:
+        yield test_client

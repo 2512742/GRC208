@@ -1,0 +1,4 @@
+asset_code,name,asset_type,service_code,owner_username,classification,obligations,description
+,Loyalty points engine,application,S1,emmanuel,confidential,NDPA-02,Referral and loyalty rewards
+,Robo-advisor model service,application,S2,anita,confidential,SEC-02;SEC-03,Automated portfolio suggestions
+,Agent network mobile app,application,S3,gilbert,confidential,NDPA-01;NDPA-02,Field agents onboarding market traders

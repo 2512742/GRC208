@@ -1,11 +1,12 @@
 """Command-line tools:  python -m app.cli --help   (run from app/backend)
 
 Every command states which database it is about to touch, so a Neon URL in `.env` is never
-changed by surprise. Later phases add: verify-audit, export-backup.
+changed by surprise. Commands: load-reference, create-user, seed-demo, verify-audit, export-backup.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import typer
@@ -141,6 +142,40 @@ def seed_demo_command(
         f"{report.acceptances} acceptance requests, {report.evidence} evidence files; "
         f"{report.reference_added} reference rows added."
     )
+
+
+@cli.command("verify-audit")
+def verify_audit_command() -> None:
+    """Recompute the audit log's hash chain; exit code 1 if it is broken."""
+    from app.services.audit import verify_chain
+
+    typer.echo(f"Target database: {describe_database(get_settings().database_url)}")
+    with Session(get_engine()) as session:
+        report = verify_chain(session)
+    if report.ok:
+        typer.echo(f"OK: {report.entries_checked} entries, chain intact.")
+        return
+    typer.echo(
+        f"BROKEN at entry {report.first_broken_id}: {report.problem} "
+        f"({report.entries_checked} entries checked).",
+        err=True,
+    )
+    raise typer.Exit(code=1)
+
+
+@cli.command("export-backup")
+def export_backup_command(
+    out_dir: Path = typer.Option(Path("backups"), "--out", help="Folder for the JSON file"),
+    with_evidence: bool = typer.Option(True, help="Include evidence file contents (base64)"),
+) -> None:
+    """Write every table to one JSON file (database-version independent, like Django's dumpdata
+    in the Guardian runbook). Run it before any schema change or database move."""
+    from app.services.backup import export_all
+
+    typer.echo(f"Source database: {describe_database(get_settings().database_url)}")
+    with Session(get_engine()) as session:
+        path, counts = export_all(session, out_dir, with_evidence=with_evidence)
+    typer.echo(f"Wrote {path} ({sum(counts.values())} rows in {len(counts)} tables).")
 
 
 if __name__ == "__main__":

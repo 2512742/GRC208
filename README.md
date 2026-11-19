@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (phases P0 to P5 complete: foundations, database, domain logic, auth API, register API, treatment and governance API (the backend can run the brief's whole required demonstration)). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **in development** (backend complete (phases P0 to P6): every brief feature is available through the API; the React frontend is next). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
@@ -104,10 +104,32 @@ GitHub Actions runs the SQLite and `postgres:18` container variants on every pus
 | Complete the action without the score changing | `POST /api/actions/{id}/complete` (note + file); the risk becomes *awaiting reassessment* |
 | Justified residual reassessment | `POST /api/risks/{id}/reassessments` (scores + rationale + file) |
 | Acceptance request approved by a different user | `POST /api/risks/{id}/acceptances`, then `POST /api/acceptances/{id}/decision` |
-| Overdue actions, expired acceptance | `GET /api/actions?overdue=true`, `GET /api/acceptances?expired=true` |
+| Overdue actions, expired acceptance and the updated management report | `GET /api/actions?overdue=true`, `GET /api/acceptances?expired=true`, `GET /api/dashboard`, `GET /api/reports/management.pdf` (or `.csv`) |
 | Unauthorised users refused | any change by the auditor, or an owner deciding their own acceptance: 403 and a `DENIED` audit entry |
 
 `tests/test_treatment_api.py::test_brief_required_demonstration` runs all of these in order.
+
+## CSV import
+
+1. Download a template: `GET /api/imports/templates/assets.csv` or `risks.csv`.
+2. Upload: `POST /api/imports/assets` (or `risks`) with the file. You get a **preview**: every row marked `valid`, `rejected` (with reasons, e.g. `service_code: no business service 'S9'`) or `duplicate` (already in the register, or repeated earlier in the file). Nothing is created yet; the file is kept as evidence.
+3. `POST /api/imports/{id}/commit` creates the valid rows (re-checked at that moment), or `/cancel`.
+
+Try it with `sample_data/assets_import_valid.csv` and `sample_data/assets_import_with_errors.csv` (one row of each kind of error). Analysts import assets and risks; admins import assets only (risks may carry scores, and admins don't assess).
+
+## Management commands
+
+From `backend/` (`python -m app.cli --help`):
+
+| Command | What it does |
+|---|---|
+| `seed-demo [--reset]` | Load The Alajo demo data (`--reset` erases and rebuilds first) |
+| `load-reference` | Add or update framework controls and regulatory obligations |
+| `create-user` | Create a user (e.g. the first admin) |
+| `verify-audit` | Recompute the audit hash chain; exit code 1 if broken |
+| `export-backup [--out DIR] [--no-with-evidence]` | Write every table to one JSON file in `backups/` (git-ignored; contains personal data and password hashes) |
+
+Every command prints the database it is about to use and asks before changing a remote one.
 
 ## Configuration
 
@@ -152,7 +174,9 @@ backend/app/services/   scoring, clock (WAT), workflow, audit chain, evidence ch
 backend/app/routers/    API routes: health, auth, users, register (services, assets,
                         obligations, controls), risks (+ initial assessment),
                         treatment (decisions, actions, completion, reassessment,
-                        acceptances), evidence (upload, list, download)
+                        acceptances), evidence (upload, list, download),
+                        reports (dashboard, management report JSON/CSV/PDF),
+                        admin (CSV import, audit log + verify + CSV, settings)
 sample_data/            The Alajo demo data in CSV import format (owned by WS2)
 backend/tests/          pytest suite
 vercel.json             Vercel config (region, rewrites)
