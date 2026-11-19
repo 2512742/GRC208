@@ -3,8 +3,8 @@
 Run locally:   uvicorn app.main:app --reload        (from app/backend)
 On Vercel:     api/index.py imports `app` from here.
 
-All API routes live under /api. Later phases also serve the built React app from here for
-local single-URL runs (PLAN.md §3).
+All API routes live under /api. When frontend/dist exists (npm run build), the React app is
+served from here too, for single-URL local and VPS runs (PLAN.md §3).
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from app.core.config import get_settings
 from app.core.headers import SecurityHeadersMiddleware
 from app.core.logging import configure_logging
+from app.frontend import mount_frontend
 from app.routers import admin, auth, evidence, health, register, reports, risks, treatment, users
 
 API_PREFIX = "/api"
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     application.include_router(evidence.router, prefix=API_PREFIX)
     application.include_router(reports.router, prefix=API_PREFIX)
     application.include_router(admin.router, prefix=API_PREFIX)
+    mount_frontend(application)  # last, so every /api route wins
     return application
 
 

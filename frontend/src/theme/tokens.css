@@ -1,0 +1,162 @@
+/* Guardian "Deep Intel" tokens (PLAN.md §2.6). Colours are RGB triplets so Tailwind can apply
+   opacity (e.g. bg-band-high/15 for heat-map tints). html.dark switches the palette. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 249 249 249;
+  --surface: 255 255 255;
+  --surface-container: 238 238 238;
+  --hover: 245 245 245;
+  --text: 26 28 28;
+  --text-muted: 63 73 71;
+  --outline: 111 121 119;
+  --outline-variant: 191 201 198;
+  --primary: 0 55 50;
+  --primary-container: 0 80 73;
+  --accent: 0 80 73;
+  --on-accent: 255 255 255;
+  --error: 186 26 26;
+  --footer: 26 28 28;
+  --band-low: 46 125 50;
+  --band-medium: 154 107 0;
+  --band-high: 199 91 0;
+  --band-critical: 186 26 26;
+  color-scheme: light;
+}
+
+html.dark {
+  --bg: 13 22 21;
+  --surface: 26 36 35;
+  --surface-container: 26 36 35;
+  --hover: 30 44 43;
+  --text: 220 228 226;
+  --text-muted: 139 181 177;
+  --outline: 43 62 60;
+  --outline-variant: 43 62 60;
+  --primary: 126 207 197;
+  --primary-container: 0 39 36;
+  --accent: 77 184 170;
+  --on-accent: 13 22 21;
+  --error: 255 180 171;
+  --footer: 5 12 11;
+  --band-low: 129 199 132;
+  --band-medium: 255 213 79;
+  --band-high: 255 183 77;
+  --band-critical: 255 180 171;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg text-ink font-sans text-sm antialiased;
+  }
+  h1 {
+    @apply text-h1 text-primary;
+  }
+  h2 {
+    @apply text-h2;
+  }
+  h3 {
+    @apply text-h3;
+  }
+  a {
+    @apply text-accent underline-offset-2 hover:underline;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .label-caps {
+    @apply text-xs font-bold uppercase tracking-[0.08em] text-muted;
+  }
+  .mono-data {
+    @apply font-mono text-[13px] font-medium;
+    font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    @apply inline-flex min-h-[36px] items-center justify-center gap-2 border px-4 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn border-accent bg-accent text-on-accent hover:bg-primary hover:border-primary;
+  }
+  .btn-secondary {
+    @apply btn border-line bg-surface text-ink hover:bg-hover;
+  }
+  .btn-ghost {
+    @apply btn border-transparent bg-transparent text-accent hover:bg-hover;
+  }
+  .btn-danger {
+    @apply btn border-danger bg-danger text-white hover:opacity-90 dark:text-bg;
+  }
+  .btn-sm {
+    @apply min-h-[30px] px-3 py-1 text-xs;
+  }
+  .input {
+    @apply block w-full border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60;
+  }
+  .card {
+    @apply border border-line bg-surface;
+  }
+  .card-header {
+    @apply flex items-center justify-between gap-2 border-b border-line px-4 py-3;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 border border-line px-2 py-0.5 text-xs font-semibold;
+  }
+  .chip-strong {
+    @apply chip border-ink bg-ink text-bg;
+  }
+  .table-base {
+    @apply w-full border-collapse text-left;
+  }
+  .table-base th {
+    @apply label-caps border-b border-line px-3 py-2 align-bottom;
+  }
+  .table-base td {
+    @apply border-b border-line px-3 py-2 align-top;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-hover;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 250ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-in {
+    animation: none;
+  }
+}

@@ -1,0 +1,158 @@
+/** Risk-specific display pieces: band badge, score, status chip, explanation, heat map. */
+import type { Band, HeatCell, ScoreSummary } from "../api/types";
+import { IMPACT_LABELS, LIKELIHOOD_LABELS, bandFor, sentenceCase, titleCase } from "../lib/format";
+import { cx } from "./ui";
+
+const BAND_TEXT: Record<Band, string> = {
+  low: "text-band-low border-band-low",
+  medium: "text-band-medium border-band-medium",
+  high: "text-band-high border-band-high",
+  critical: "text-band-critical border-band-critical",
+};
+
+const BAND_TINT: Record<Band, string> = {
+  low: "bg-band-low/15",
+  medium: "bg-band-medium/15",
+  high: "bg-band-high/15",
+  critical: "bg-band-critical/15",
+};
+
+/** Colour is never the only signal: the band name is always printed. */
+export function BandBadge({ band }: { band: Band }) {
+  return (
+    <span className={cx("chip whitespace-nowrap", BAND_TEXT[band], BAND_TINT[band])}>
+      {titleCase(band)}
+    </span>
+  );
+}
+
+export function ScoreBadge({ score }: { score: ScoreSummary | null | undefined }) {
+  if (!score) return <span className="chip text-muted">Not assessed</span>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="mono-data text-base font-bold" title={score.explanation}>
+        {score.likelihood}×{score.impact}={score.score}
+      </span>
+      <BandBadge band={score.band} />
+      {score.above_appetite && (
+        <span className="chip-strong whitespace-nowrap" title="Score at or above the appetite threshold">
+          Above appetite
+        </span>
+      )}
+    </span>
+  );
+}
+
+const STRONG_STATUSES = new Set(["overdue", "expired", "acceptance_expired", "rejected", "blocked"]);
+
+export function StatusChip({ status }: { status: string | null | undefined }) {
+  if (!status) return <span className="text-muted">—</span>;
+  return (
+    <span className={cx(STRONG_STATUSES.has(status) ? "chip-strong" : "chip", "whitespace-nowrap")}>
+      {sentenceCase(status)}
+    </span>
+  );
+}
+
+export function Explanation({ text }: { text: string }) {
+  return (
+    <p className="border-l-4 border-accent bg-accent/5 px-3 py-2 font-medium" data-testid="explanation">
+      {text}
+    </p>
+  );
+}
+
+/**
+ * 5×5 heat map: likelihood rows (5 at the top), impact columns. A dashed line marks the cells at
+ * or above the appetite threshold. Clicking a cell with risks calls onSelect.
+ */
+export function HeatMap({
+  cells,
+  threshold,
+  onSelect,
+  selected,
+}: {
+  cells: HeatCell[];
+  threshold: number;
+  onSelect?: (cell: HeatCell) => void;
+  selected?: { likelihood: number; impact: number } | null;
+}) {
+  const at = (l: number, i: number) =>
+    cells.find((c) => c.likelihood === l && c.impact === i) ?? {
+      likelihood: l,
+      impact: i,
+      score: l * i,
+      count: 0,
+      risk_codes: [],
+    };
+  return (
+    <div className="overflow-x-auto">
+      <div className="inline-grid min-w-full grid-cols-[auto_repeat(5,minmax(3rem,1fr))] gap-px">
+        <div className="label-caps flex items-end pb-1 pr-2 text-[10px]">L ↓ / I →</div>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={`h${i}`} className="label-caps px-1 pb-1 text-center text-[10px]" title={IMPACT_LABELS[i]}>
+            {i}
+            <span className="hidden lg:inline"> {IMPACT_LABELS[i]}</span>
+          </div>
+        ))}
+        {[5, 4, 3, 2, 1].map((l) => (
+          <Row key={l} l={l} at={at} threshold={threshold} onSelect={onSelect} selected={selected} />
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        Dashed outline: score {threshold} or more (above appetite). Click a cell to see its risks.
+      </p>
+    </div>
+  );
+}
+
+function Row({
+  l,
+  at,
+  threshold,
+  onSelect,
+  selected,
+}: {
+  l: number;
+  at: (l: number, i: number) => HeatCell;
+  threshold: number;
+  onSelect?: (cell: HeatCell) => void;
+  selected?: { likelihood: number; impact: number } | null;
+}) {
+  return (
+    <>
+      <div className="label-caps flex items-center pr-2 text-[10px]" title={LIKELIHOOD_LABELS[l]}>
+        {l}
+        <span className="hidden lg:inline">&nbsp;{LIKELIHOOD_LABELS[l]}</span>
+      </div>
+      {[1, 2, 3, 4, 5].map((i) => {
+        const cell = at(l, i);
+        const band = bandFor(cell.score);
+        const above = cell.score >= threshold;
+        const isSelected = selected?.likelihood === l && selected?.impact === i;
+        return (
+          <button
+            key={i}
+            type="button"
+            disabled={!onSelect || cell.count === 0}
+            onClick={() => onSelect?.(cell)}
+            aria-label={`Likelihood ${l}, impact ${i}, score ${cell.score} (${band}): ${cell.count} risk${cell.count === 1 ? "" : "s"}${cell.count ? `: ${cell.risk_codes.join(", ")}` : ""}`}
+            title={cell.risk_codes.join(", ") || "No risks"}
+            className={cx(
+              "relative flex aspect-[4/3] min-h-[2.75rem] flex-col items-center justify-center border",
+              BAND_TINT[band],
+              above ? "border-dashed border-ink/70" : "border-transparent",
+              isSelected && "outline outline-2 outline-accent",
+              cell.count > 0 && onSelect && "hover:brightness-95 dark:hover:brightness-125",
+            )}
+          >
+            <span className={cx("mono-data text-lg font-bold", cell.count ? BAND_TEXT[band].split(" ")[0] : "text-muted/50")}>
+              {cell.count || "·"}
+            </span>
+            <span className="mono-data text-[10px] text-muted">{cell.score}</span>
+          </button>
+        );
+      })}
+    </>
+  );
+}

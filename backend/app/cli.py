@@ -178,5 +178,18 @@ def export_backup_command(
     typer.echo(f"Wrote {path} ({sum(counts.values())} rows in {len(counts)} tables).")
 
 
+@cli.command("export-openapi")
+def export_openapi_command(
+    out: Path = typer.Option(Path("openapi.json"), help="Where to write the API contract"),
+) -> None:
+    """Write the OpenAPI contract the frontend generates its types from (npm run gen:api)."""
+    import json
+
+    from app.main import app
+
+    out.write_text(json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    typer.echo(f"Wrote {out}")
+
+
 if __name__ == "__main__":
     cli()

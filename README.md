@@ -8,7 +8,7 @@ Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Gro
 
 - **Backend:** Python 3.12+ (3.13 locally), FastAPI, SQLModel/SQLAlchemy 2, Alembic
 - **Database:** SQLite by default; PostgreSQL (Neon) when hosted
-- **Frontend:** React + Vite + TypeScript + Tailwind *(later)*
+- **Frontend:** React 19 + Vite 7 + TypeScript + Tailwind 3 (Guardian "Deep Intel" design system), TanStack Query; Node 20.19+
 - **Hosting:** Vercel (API as a Python function, region `cle1`) + Neon PostgreSQL (us-east-2)
 
 ## Run it locally (SQLite, nothing else to install)
@@ -35,11 +35,19 @@ python -m app.cli seed-demo --reset
 #   (or, for an empty register: python -m app.cli load-reference
 #    and python -m app.cli create-user --username admin --full-name "Admin" --role admin)
 
-# 4. Run
-uvicorn app.main:app --reload
+# 4. Build the web app once (FastAPI serves it, so everything is on one URL)
+cd ../frontend
+npm ci
+npm run build
+cd ../backend
+
+# 5. Run
+uvicorn app.main:app
 ```
 
-Open http://127.0.0.1:8000/api/health (expect `"status": "ok"`) and the interactive API docs at http://127.0.0.1:8000/api/docs.
+Open http://127.0.0.1:8000 and sign in with one of the demo accounts below. The API health check is at http://127.0.0.1:8000/api/health and the interactive API docs at http://127.0.0.1:8000/api/docs.
+
+**Developing the frontend:** run `uvicorn app.main:app --reload` in `backend/` and `npm run dev` in `frontend/`, then open http://localhost:5173 (Vite forwards `/api` to port 8000, so cookies work as in production). `/kitchen-sink` shows every shared component on mock data; toggle the theme and narrow the window to check both themes and the phone layout. After an API change, refresh the TypeScript types with `python -m app.cli export-openapi` (in `backend/`) and `npm run gen:api` (in `frontend/`).
 
 ### Demo accounts (local SQLite demo only)
 
@@ -86,7 +94,13 @@ TEST_DB=neon pytest
 
 The suite refuses to run on any PostgreSQL database whose name doesn't contain "test".
 
-GitHub Actions runs the SQLite and `postgres:18` container variants on every push and pull request (`.github/workflows/ci.yml`); CI never receives Neon credentials.
+Frontend checks, from `frontend/`:
+
+```bash
+npm run typecheck && npm test && npm run build
+```
+
+GitHub Actions runs the backend on SQLite and on a `postgres:18` container, and the frontend typecheck, tests, build and `npm audit`, on every push and pull request (`.github/workflows/ci.yml`); CI never receives Neon credentials.
 
 ## Signing in (API)
 
@@ -153,7 +167,7 @@ Owned and run by the technical lead. Summary *(full steps later)*:
 
 1. In Vercel, import the GitHub repository; set the environment variables above for Production (pooled Neon URL as `DATABASE_URL`, a new random `SECRET_KEY`).
 2. From a developer machine whose `.env` holds the Neon URLs: `alembic upgrade head`, then `python -m app.cli load-reference` (migrations use `DATABASE_URL_DIRECT`).
-3. Deploy `main`; check `https://<project>.vercel.app/api/health`.
+3. Deploy `main`; Vercel builds `frontend/` into static files (served by its CDN with the same security headers as the API, see `vercel.json`) and runs the API as a Python function. Check `https://<project>.vercel.app/api/health`, then sign in.
 
 Secrets live only in `.env` (git-ignored) and in Vercel's settings. If a connection string is ever exposed, reset the password in Neon.
 
@@ -178,8 +192,16 @@ backend/app/routers/    API routes: health, auth, users, register (services, ass
                         reports (dashboard, management report JSON/CSV/PDF),
                         admin (CSV import, audit log + verify + CSV, settings)
 sample_data/            The Alajo demo data in CSV import format (owned by WS2)
+backend/app/frontend.py serves frontend/dist for single-URL local and VPS runs
 backend/tests/          pytest suite
-vercel.json             Vercel config (region, rewrites)
+frontend/src/api/       fetch client (CSRF header, errors), generated OpenAPI types, queries
+frontend/src/auth/      session, permissions and display time-zone preference
+frontend/src/components/ design system: ui, modal, toast, risk badges, heat map, dialogs
+frontend/src/layout/    app shell, role-based navigation, theme and time-zone controls
+frontend/src/pages/     one file per screen (dashboard, register, risk detail, actions,
+                        acceptances, assets, reports, import, audit, users, settings)
+frontend/src/lib/       time-zone formatting and number/label helpers
+vercel.json             Vercel config (region, static build, rewrites, headers)
 ```
 
 ## Team
