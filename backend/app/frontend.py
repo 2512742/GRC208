@@ -32,7 +32,8 @@ def mount_frontend(app: FastAPI, dist: Path = DIST_DIR) -> bool:
         return False
     root = dist.resolve()
 
-    @app.get("/{path:path}", include_in_schema=False)
+    # HEAD too: uptime monitors and link previews probe pages with it.
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def spa(path: str) -> FileResponse:
         if path == "api" or path.startswith("api/"):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")

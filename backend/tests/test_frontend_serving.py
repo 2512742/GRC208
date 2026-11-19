@@ -91,3 +91,9 @@ def test_pwa_files_served_correctly(tmp_path: Path) -> None:
     manifest = client.get("/manifest.webmanifest")
     assert manifest.headers["content-type"].startswith("application/manifest+json")
     assert "script-src 'self'" in manifest.headers["content-security-policy"]
+
+
+def test_head_requests_answered(tmp_path: Path) -> None:
+    client = make_app(tmp_path)
+    assert client.head("/").status_code == 200
+    assert client.head("/risks/R-013").status_code == 200
