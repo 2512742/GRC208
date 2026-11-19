@@ -9,12 +9,14 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 
 from sqlalchemy import and_, exists, func, or_
 from sqlalchemy.orm import aliased
 from sqlmodel import Session, col, select
 
 from app.models import (
+    AcceptanceRequest,
     Asset,
     BusinessService,
     Obligation,
@@ -22,9 +24,11 @@ from app.models import (
     RiskAssessment,
     RiskAsset,
     RiskObligation,
+    TreatmentAction,
+    TreatmentDecision,
     User,
 )
-from app.models.enums import AssessmentType, Band, RiskStatus
+from app.models.enums import AcceptanceStatus, AssessmentType, Band, RiskStatus
 from app.schemas.register import (
     AssessmentOut,
     AssetRef,
@@ -36,6 +40,11 @@ from app.schemas.register import (
 )
 from app.services import governance
 from app.services.scoring import GovernancePolicy, review_is_upcoming, score_risk
+from app.services.workflow import (
+    OPEN_ACTION_STATUSES,
+    acceptance_is_expired,
+    display_risk_status,
+)
 
 Current = aliased(RiskAssessment, name="current_assessment")
 
@@ -155,9 +164,13 @@ def build_summaries(
         ).all()
     )
 
+    treatment = _treatment_state(session, risk_ids, today)
+
     summaries = []
     for risk, current in rows:
         assets = assets_by_risk.get(risk.id, [])  # type: ignore[arg-type]
+        state = treatment.get(risk.id, {})  # type: ignore[arg-type]
+        expiry = state.get("acceptance_expiry")
         summaries.append(
             RiskSummary(
                 id=risk.id,  # type: ignore[arg-type]
@@ -172,9 +185,59 @@ def build_summaries(
                 original_score=originals.get(risk.id),
                 next_review_date=risk.next_review_date,
                 review_due_soon=review_is_upcoming(risk.next_review_date, today, policy),
+                display_status=display_risk_status(
+                    risk.status, acceptance_is_expired("approved", expiry, today)
+                ),
+                strategy=state.get("strategy"),
+                open_actions=state.get("open_actions", 0),
+                overdue_actions=state.get("overdue_actions", 0),
+                acceptance_expiry=expiry,
             )
         )
     return summaries
+
+
+def _treatment_state(session: Session, risk_ids: list, today: date) -> dict[int, dict]:  # type: ignore[type-arg]
+    """Per risk: latest strategy, open/overdue action counts, latest approved acceptance expiry."""
+    state: dict[int, dict] = defaultdict(dict)  # type: ignore[type-arg]
+    latest_decision = (
+        select(TreatmentDecision.risk_id, func.max(TreatmentDecision.id).label("did"))
+        .where(col(TreatmentDecision.risk_id).in_(risk_ids))
+        .group_by(TreatmentDecision.risk_id)
+        .subquery()
+    )
+    for risk_id, strategy in session.exec(
+        select(TreatmentDecision.risk_id, TreatmentDecision.strategy).join(
+            latest_decision, latest_decision.c.did == TreatmentDecision.id
+        )
+    ):
+        state[risk_id]["strategy"] = strategy
+    for risk_id, due in session.exec(
+        select(TreatmentAction.risk_id, TreatmentAction.due_date).where(
+            col(TreatmentAction.risk_id).in_(risk_ids),
+            col(TreatmentAction.status).in_(OPEN_ACTION_STATUSES),
+        )
+    ):
+        entry = state[risk_id]
+        entry["open_actions"] = entry.get("open_actions", 0) + 1
+        if due < today:
+            entry["overdue_actions"] = entry.get("overdue_actions", 0) + 1
+    latest_acceptance = (
+        select(AcceptanceRequest.risk_id, func.max(AcceptanceRequest.id).label("aid"))
+        .where(
+            col(AcceptanceRequest.risk_id).in_(risk_ids),
+            AcceptanceRequest.status == AcceptanceStatus.APPROVED.value,
+        )
+        .group_by(AcceptanceRequest.risk_id)
+        .subquery()
+    )
+    for risk_id, expiry in session.exec(
+        select(AcceptanceRequest.risk_id, AcceptanceRequest.expiry_date).join(
+            latest_acceptance, latest_acceptance.c.aid == AcceptanceRequest.id
+        )
+    ):
+        state[risk_id]["acceptance_expiry"] = expiry
+    return state
 
 
 def risk_detail(session: Session, risk: Risk) -> RiskDetail:

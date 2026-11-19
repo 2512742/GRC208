@@ -233,6 +233,11 @@ class RiskSummary(BaseModel):
     original_score: int | None
     next_review_date: date | None
     review_due_soon: bool
+    display_status: str = Field(description="status, or 'acceptance_expired' when it lapsed")
+    strategy: str | None = Field(default=None, description="Latest treatment decision")
+    open_actions: int = 0
+    overdue_actions: int = 0
+    acceptance_expiry: date | None = None
 
 
 class RiskDetail(RiskSummary):

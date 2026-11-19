@@ -1,0 +1,23 @@
+risk_code,strategy,justification,target_likelihood,target_impact
+R-001,reduce,Engineering fix is affordable and removes a direct path to fund loss.,1,5
+R-002,reduce,Signature checks and settlement re-query close the forgery path.,1,5
+R-003,reduce,Block public access and encrypt; exposure of identity data is unacceptable.,1,5
+R-004,reduce,Short-lived vaulted credentials and mTLS limit any leaked token.,1,5
+R-005,reduce,Object-level authorisation is a standard fix for BOLA.,1,4
+R-006,reduce,Circuit breaker stops automated orders on abnormal prices.,2,3
+R-007,reduce,Remove manual overrides and add a cooling-off period after device changes.,2,4
+R-008,avoid,Stop handling card data in our pages by moving to hosted payment fields.,,
+R-009,reduce,Maker-checker dual control on portfolio changes and exports.,1,4
+R-010,accept,Second SMS aggregator costs more than the expected loss this year.,,
+R-011,reduce,Mask PII columns in the BI replica.,1,4
+R-012,reduce,Velocity rules and AML screening; crime insurance covers residual losses.,2,4
+R-013,reduce,Rate limiting and bot protection on the KYC endpoints.,1,4
+R-014,accept,T+1 reconciliation is acceptable to the business while the vendor improves.,,
+R-015,accept,Few people hold access and logging is in place; PAM rollout is planned for next year.,,
+R-016,reduce,Immutable offline backups and tested restores.,2,5
+R-017,transfer,A DDoS protection service absorbs attacks under contract.,2,3
+R-018,reduce,Stronger liveness checks and device fingerprinting at onboarding.,2,3
+R-019,transfer,Contract clauses and cyber insurance transfer the financial exposure.,2,4
+R-020,reduce,Register sender IDs and enforce DMARC to block impersonation.,2,3
+R-021,reduce,Make scheduled debit jobs idempotent.,1,4
+R-022,accept,Low impact: data self-corrects at the next successful sync.,,

@@ -2,7 +2,7 @@
 
 Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Group 1 for the fictional Lagos fintech **The Alajo**.
 
-> Status: **in development** (phases P0 to P4 complete: foundations, database, domain logic, auth API, register API). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
+> Status: **in development** (phases P0 to P5 complete: foundations, database, domain logic, auth API, register API, treatment and governance API (the backend can run the brief's whole required demonstration)). Sections marked *(later)* are filled in as each phase lands. The full plan is in the project folder's `PLAN.md`.
 
 ## Stack
 
@@ -56,7 +56,7 @@ Open http://127.0.0.1:8000/api/health (expect `"status": "ok"`) and the interact
 | `kelechi` | Kelechi Kenneth Nwankwo, CRO | approver |
 | `ernestina` | Ernestina Lamiorkor Tawiah, Internal Auditor | auditor (read-only) |
 
-The demo data (3 services, 18 assets, 22 scored risks) lives in `sample_data/alajo_assets.csv` and `sample_data/alajo_risks.csv`, in the CSV import format. Edit them in a spreadsheet and re-run `seed-demo --reset`; invalid rows are reported with their row numbers. Dates are relative to the day you seed.
+The demo data lives in `sample_data/` as CSV: `alajo_assets.csv` (18 assets in 3 services), `alajo_risks.csv` (22 scored risks), `alajo_decisions.csv` (treatment strategy per risk) and `alajo_treatments.csv` (18 actions with owners, due dates relative to today, costs in ₦ and framework controls). The seed also sets up each state the brief asks to demonstrate: an overdue action (T-003), an expired acceptance (R-014), a completed action awaiting reassessment (R-002), a reassessed risk with history (R-013, 12 then 4), a valid acceptance (R-010) and two pending requests (R-015, the CISO's own risk that only the CRO may decide, and R-022). Evidence files are small PDFs marked "fictional demo evidence". Edit them in a spreadsheet and re-run `seed-demo --reset`; invalid rows are reported with their row numbers. Dates are relative to the day you seed.
 
 > If your `.env` sets `DATABASE_URL`, these commands act on **that** database. CLI commands print the target and ask before touching a remote one.
 
@@ -94,6 +94,20 @@ GitHub Actions runs the SQLite and `postgres:18` container variants on every pus
 - Every `POST`, `PATCH`, `PUT` and `DELETE` must send that token in the `X-CSRF-Token` header, or it is refused with 403 (and audited).
 - Sessions end after 2 idle hours or 12 hours in total. Five failed sign-ins for a username lock it for 15 minutes (counted from the audit log, so the limit holds across serverless instances).
 - Try it in the interactive docs at `/api/docs`.
+
+## The required demonstration through the API
+
+| Brief step | Endpoint |
+|---|---|
+| Create a risk with L4 × I5 = 20 | `POST /api/risks` with `initial_assessment` |
+| Assign a treatment action and upload evidence | `POST /api/risks/{id}/actions`, `POST /api/evidence` |
+| Complete the action without the score changing | `POST /api/actions/{id}/complete` (note + file); the risk becomes *awaiting reassessment* |
+| Justified residual reassessment | `POST /api/risks/{id}/reassessments` (scores + rationale + file) |
+| Acceptance request approved by a different user | `POST /api/risks/{id}/acceptances`, then `POST /api/acceptances/{id}/decision` |
+| Overdue actions, expired acceptance | `GET /api/actions?overdue=true`, `GET /api/acceptances?expired=true` |
+| Unauthorised users refused | any change by the auditor, or an owner deciding their own acceptance: 403 and a `DENIED` audit entry |
+
+`tests/test_treatment_api.py::test_brief_required_demonstration` runs all of these in order.
 
 ## Configuration
 
@@ -136,7 +150,9 @@ backend/app/core/auth.py        sessions, CSRF check, permission dependencies
 backend/app/core/permissions.py role table, ownership and separation-of-duties rules
 backend/app/services/   scoring, clock (WAT), workflow, audit chain, evidence checks, users
 backend/app/routers/    API routes: health, auth, users, register (services, assets,
-                        obligations, controls), risks (+ initial assessment)
+                        obligations, controls), risks (+ initial assessment),
+                        treatment (decisions, actions, completion, reassessment,
+                        acceptances), evidence (upload, list, download)
 sample_data/            The Alajo demo data in CSV import format (owned by WS2)
 backend/tests/          pytest suite
 vercel.json             Vercel config (region, rewrites)

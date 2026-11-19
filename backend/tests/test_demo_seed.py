@@ -47,6 +47,9 @@ def count(db: Session, model: type) -> int:
 def seeded(db: Session) -> Session:
     if count(db, Risk):
         pytest.skip("database already holds risks")
+    # Entries committed by other tests (e.g. the CLI tests) may already exist: remember where
+    # the seed's own entries start.
+    db.info["audit_before_seed"] = db.exec(select(func.max(AuditLog.id))).one() or 0
     seed_demo(db, DEMO_PASSWORD)
     return db
 
@@ -78,6 +81,7 @@ def test_register_matches_plan_4_2(seeded: Session) -> None:
     rows = db.exec(
         select(Risk.risk_code, RiskAssessment.likelihood, RiskAssessment.impact, User.username)
         .join(RiskAssessment, RiskAssessment.risk_id == Risk.id)
+        .where(RiskAssessment.assessment_type == "initial")
         .join(User, User.id == Risk.owner_id)
     ).all()
     assert {code: (lk, im, who) for code, lk, im, who in rows} == EXPECTED
@@ -87,7 +91,9 @@ def test_every_seeded_record_is_audited_as_the_analyst(seeded: Session) -> None:
     db = seeded
     creators = set(
         db.exec(
-            select(AuditLog.username).where(
+            select(AuditLog.username)
+            .where(AuditLog.action == "CREATE")
+            .where(
                 AuditLog.object_type.in_(  # type: ignore[attr-defined]
                     ["service", "asset", "risk"]
                 )
@@ -125,3 +131,70 @@ def test_invalid_sample_rows_are_reported_with_row_numbers(tmp_path: Path) -> No
     message = str(info.value)
     assert "row 3" in message and "row 2" not in message
     assert "title" in message and "asset_codes" in message and "likelihood" in message
+
+
+def test_t30_part2_every_required_demo_state_present(seeded: Session) -> None:
+    """Brief 'minimum demonstration data': >=12 actions, an overdue action, an expired
+    acceptance, a completed treatment awaiting reassessment, risks above appetite."""
+    from app.models import AcceptanceRequest, Evidence, TreatmentAction
+    from app.services.governance import org_today
+    from app.services.workflow import acceptance_is_expired, action_is_overdue
+
+    db = seeded
+    today = org_today(db)
+    actions = db.exec(select(TreatmentAction)).all()
+    assert len(actions) >= 12
+    assert [a.action_code for a in actions if action_is_overdue(a.status, a.due_date, today)] == [
+        "T-003"
+    ]
+
+    acceptances = db.exec(select(AcceptanceRequest)).all()
+    expired = [a for a in acceptances if acceptance_is_expired(a.status, a.expiry_date, today)]
+    assert len(expired) == 1
+    assert {a.status for a in acceptances} == {"approved", "pending"}
+
+    risks = {r.risk_code: r for r in db.exec(select(Risk))}
+    assert risks["R-002"].status == "awaiting_reassessment"
+    assert (
+        db.exec(
+            select(RiskAssessment.score)
+            .where(RiskAssessment.risk_id == risks["R-002"].id)
+            .order_by(col(RiskAssessment.id).desc())
+        ).first()
+        == 20
+    )
+    r013 = db.exec(
+        select(RiskAssessment.score)
+        .where(RiskAssessment.risk_id == risks["R-013"].id)
+        .order_by(col(RiskAssessment.id))
+    ).all()
+    assert list(r013) == [12, 4]
+    assert risks["R-010"].status == "accepted"
+    completed = [a for a in actions if a.status == "completed"]
+    assert {a.action_code for a in completed} == {"T-002", "T-011"}
+    assert db.exec(select(func.count()).select_from(Evidence)).one() == 3
+
+
+def test_ciso_owned_pending_request_only_the_cro_may_decide(seeded: Session) -> None:
+    from app.core.permissions import Actor, Perm, Target, authorize
+    from app.models import AcceptanceRequest
+    from app.models.enums import Role
+
+    db = seeded
+    users = {u.username: u for u in db.exec(select(User))}
+    r015 = db.exec(select(Risk).where(Risk.risk_code == "R-015")).one()
+    request = db.exec(select(AcceptanceRequest).where(AcceptanceRequest.risk_id == r015.id)).one()
+    target = Target(risk_owner_id=r015.owner_id, acceptance_requested_by_id=request.requested_by_id)
+    assert not authorize(Actor(users["adeola"].id, Role.APPROVER), Perm.DECIDE_ACCEPTANCE, target)
+    assert authorize(Actor(users["kelechi"].id, Role.APPROVER), Perm.DECIDE_ACCEPTANCE, target)
+
+
+def test_seeded_audit_log_is_chronological(seeded: Session) -> None:
+    first = seeded.info["audit_before_seed"]
+    times = list(
+        seeded.exec(
+            select(AuditLog.occurred_at).where(AuditLog.id > first).order_by(col(AuditLog.id))
+        )
+    )
+    assert len(times) > 100
+    assert times == sorted(times)

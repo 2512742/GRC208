@@ -1,0 +1,19 @@
+action_code,risk_code,title,owner_username,due_in_days,status,estimated_cost_ngn,controls,completion_note
+T-001,R-001,Add row locking and idempotency keys to ledger endpoints,emmanuel,20,in_progress,2500000,PR.PS;A.8.28;CIS-16,
+T-002,R-002,Verify HMAC webhook signatures and re-query settlement before crediting,emmanuel,10,completed,1200000,PR.DS;A.8.26,HMAC verification and settlement re-query live in production; forged test webhooks were rejected.
+T-003,R-003,Block public access and encrypt the identity bucket with customer-managed keys,gilbert,-10,in_progress,800000,PR.DS;A.8.24;CIS-03,
+T-004,R-004,Move fund manager tokens to a vault with 24-hour rotation and mutual TLS,anita,45,not_started,3000000,PR.AA;A.5.17,
+T-005,R-005,Replace sequential goal IDs with UUIDs and enforce object ownership checks,emmanuel,25,in_progress,1500000,PR.AA;A.8.26,
+T-006,R-006,Add a 2.5 percent price variance circuit breaker with manual verification,anita,60,not_started,900000,DE.AE;A.8.16,
+T-007,R-007,Remove Tier-1 2FA overrides; add liveness check and 24-hour cooling-off,gilbert,15,in_progress,1800000,PR.AA;A.8.5,
+T-008,R-008,Replace the custom card form with PCI-certified hosted payment fields,emmanuel,50,in_progress,2000000,PR.DS;A.8.26;CIS-16,
+T-009,R-009,Introduce maker-checker approval for portfolio changes and bulk exports,anita,70,not_started,1100000,PR.AA;A.5.3,
+T-010,R-012,Deploy 30-day velocity rules and AML screening integration,gilbert,40,in_progress,4500000,DE.CM;A.8.16,
+T-011,R-013,Rate limiting and WAF bot protection on the KYC endpoints,gilbert,5,completed,700000,PR.PS;CIS-13,Rate limits of 5 lookups per minute per account and WAF bot rules enabled; credential-stuffing traffic now blocked.
+T-012,R-016,Immutable offline backups with quarterly restore tests,emmanuel,30,in_progress,3500000,PR.IR;A.8.13;CIS-11,
+T-013,R-017,Sign a DDoS protection service contract for the apps,emmanuel,35,not_started,6000000,PR.IR;A.5.19,
+T-014,R-019,Add breach liability and notification clauses to the vendor contract,gilbert,30,not_started,250000,GV.SC;A.5.19,
+T-015,R-020,Register sender IDs and enforce DMARC reject on the email domain,gilbert,20,in_progress,300000,PR.DS;CIS-09,
+T-016,R-011,Mask PII columns in the reporting replica,anita,90,not_started,600000,PR.DS;A.8.11,
+T-017,R-018,Device fingerprinting and stronger liveness checks at onboarding,gilbert,80,not_started,1400000,PR.AA;A.5.15,
+T-018,R-021,Make scheduled debit jobs idempotent,emmanuel,100,not_started,500000,PR.PS;A.8.28,

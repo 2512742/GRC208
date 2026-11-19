@@ -136,7 +136,10 @@ def seed_demo_command(
     typer.echo(
         f"Seeded {report.users} users, {report.services} services, {report.assets} assets, "
         f"{report.risks} risks ({report.assessed} assessed, {report.above_appetite} above "
-        f"appetite); {report.reference_added} reference rows added."
+        f"appetite); {report.decisions} decisions, {report.actions} actions "
+        f"({report.completed} completed), {report.reassessed} reassessed, "
+        f"{report.acceptances} acceptance requests, {report.evidence} evidence files; "
+        f"{report.reference_added} reference rows added."
     )
 
 
