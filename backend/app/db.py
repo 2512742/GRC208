@@ -11,9 +11,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Engine, event
+from sqlalchemy import Engine, event, make_url
 from sqlalchemy.pool import NullPool
 from sqlmodel import Session, create_engine
 
@@ -26,6 +27,7 @@ def build_engine(settings: Settings) -> Engine:
 
     if settings.is_sqlite:
         connect_args["check_same_thread"] = False  # FastAPI may use the connection in a threadpool
+        _ensure_sqlite_folder(settings.database_url)
     else:
         if settings.uses_connection_pooler:
             connect_args["prepare_threshold"] = None
@@ -45,6 +47,13 @@ def build_engine(settings: Settings) -> Engine:
             cursor.close()
 
     return engine
+
+
+def _ensure_sqlite_folder(url: str) -> None:
+    """SQLite creates the file but not its folder (e.g. a fresh clone without backend/data/)."""
+    database = make_url(url).database
+    if database and database != ":memory:":
+        Path(database).parent.mkdir(parents=True, exist_ok=True)
 
 
 @lru_cache

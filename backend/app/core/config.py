@@ -22,7 +22,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]  # app/backend
 REPO_DIR = BACKEND_DIR.parent  # app/ (git repository root)
-DEFAULT_SQLITE_URL = f"sqlite:///{BACKEND_DIR / 'risktrack.sqlite3'}"
+DATA_DIR = BACKEND_DIR / "data"  # in-project SQLite home (git-ignored file; VPS volume target)
+DEFAULT_SQLITE_URL = f"sqlite:///{DATA_DIR / 'risktrack.sqlite3'}"
 
 
 def normalise_database_url(url: str) -> str:

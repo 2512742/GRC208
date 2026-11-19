@@ -29,7 +29,7 @@ python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 
-# 3. Database (local SQLite file backend/risktrack.sqlite3)
+# 3. Database (in-project SQLite file backend/data/risktrack.sqlite3)
 alembic upgrade head
 python -m app.cli load-reference
 
@@ -61,7 +61,15 @@ TEST_DATABASE_URL=postgresql://risktrack:risktrack@localhost:55432/risktrack_tes
 docker stop risktrack-pg
 ```
 
-GitHub Actions runs both variants on every push and pull request (`.github/workflows/ci.yml`).
+Against the team's Neon server (database `risktrack_test`, never production; needs the Neon URLs in `.env`). Slower, because every query crosses the network; run it before merging or deploying:
+
+```bash
+TEST_DB=neon pytest
+```
+
+The suite refuses to run on any PostgreSQL database whose name doesn't contain "test".
+
+GitHub Actions runs the SQLite and `postgres:18` container variants on every push and pull request (`.github/workflows/ci.yml`); CI never receives Neon credentials.
 
 ## Configuration
 
@@ -71,7 +79,7 @@ All settings come from environment variables or `.env` (real environment variabl
 |---|---|---|---|
 | `SECRET_KEY` | yes | none | 32+ characters. The app refuses to start without it |
 | `DEBUG` | no | `false` | Never `true` on Vercel |
-| `DATABASE_URL` | no | local SQLite file | On Vercel: Neon **pooled** URL |
+| `DATABASE_URL` | no | `backend/data/risktrack.sqlite3` | On Vercel: Neon **pooled** URL |
 | `DATABASE_URL_DIRECT` | no | `DATABASE_URL` | Neon **direct** URL, used only for migrations |
 | `ORG_TIMEZONE` | no | `Africa/Lagos` | Deadlines and expiry are evaluated in this zone |
 | `LOG_FILE` | no | none | Local runs only |

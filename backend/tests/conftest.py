@@ -5,17 +5,52 @@ database: a developer's `.env` may hold the Neon URL, and real environment varia
 
 - Default: a throwaway SQLite file per test session.
 - DATABASE_URL_DIRECT is forced empty so migrations also go to the test database.
+- `TEST_DB=neon pytest` runs against the Neon database `risktrack_test` (same server as the
+  URLs in `.env`, never `neondb`).
 - CI's PostgreSQL job sets TEST_DATABASE_URL to its `postgres:18` service container.
+- Safety: tests refuse any PostgreSQL database whose name doesn't contain "test", because the
+  suite drops and rebuilds the whole schema.
 """
 
 from __future__ import annotations
 
+import atexit
 import os
+import shutil
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
+from sqlalchemy import make_url  # noqa: E402
+
+NEON_TEST_DATABASE = "risktrack_test"
+
+
+def _neon_test_url() -> str:
+    """Neon URL for the test database, derived from the direct URL in `.env`."""
+    from app.core.config import Settings
+
+    settings = Settings()  # type: ignore[call-arg]  # reads .env
+    if settings.is_sqlite:
+        raise RuntimeError("TEST_DB=neon needs the Neon URLs in .env")
+    source = settings.database_url_direct or settings.database_url  # direct: tests run DDL
+    url = make_url(source).set(database=NEON_TEST_DATABASE)
+    return url.render_as_string(hide_password=False)
+
+
+if os.environ.get("TEST_DB", "").lower() == "neon" and "TEST_DATABASE_URL" not in os.environ:
+    os.environ["TEST_DATABASE_URL"] = _neon_test_url()
+
+if "TEST_DATABASE_URL" in os.environ:
+    _name = make_url(os.environ["TEST_DATABASE_URL"]).database or ""
+    if "test" not in _name.lower():
+        raise RuntimeError(
+            f"Refusing to run tests on database {_name!r}: the suite drops the schema. "
+            "Use a database whose name contains 'test'."
+        )
+
 _tmp_dir = Path(tempfile.mkdtemp(prefix="risktrack-tests-"))
+atexit.register(shutil.rmtree, _tmp_dir, ignore_errors=True)  # remove the throwaway DB afterwards
 os.environ["SECRET_KEY"] = "test-secret-key-that-is-at-least-32-characters-long"
 os.environ["DEBUG"] = "false"
 os.environ["DATABASE_URL"] = os.environ.get(
