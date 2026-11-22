@@ -1,45 +1,26 @@
-# ── Python ──
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-*.egg-info/
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-coverage.xml
-htmlcov/
+# Repository-wide ignores. The app keeps its own rules in WS1-development/app/.gitignore.
 
-# ── Databases and dumps (never commit data or backups) ──
-*.sqlite3
-*.sqlite3-journal
-*.db
-*.sql
-*.dump
-backups/
-
-# ── Secrets ──
+# ── Secrets and private links: never commit ──
+notes.txt
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+**/app-access-message.txt
 
-# ── Node / frontend ──
-node_modules/
-frontend/dist/
-*.tsbuildinfo
+# ── Institutional originals (ICDFA brief and template): kept locally, not ours to publish ──
+docs/reference/
 
-# ── Deploy tooling ──
-.vercel/
+# ── Office and OS temporary files ──
+~$*
+*.tmp
+.~lock.*#
+.DS_Store
+Thumbs.db
 
-# ── Logs ──
-logs/
-*.log
-
-# ── Editors / OS ──
+# ── Archives and editor folders ──
+*.zip
 .vscode/
 .idea/
 .claude/
-.DS_Store
-Thumbs.db
-*.swp

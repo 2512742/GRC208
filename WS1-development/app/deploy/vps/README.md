@@ -29,8 +29,8 @@ The hosted demo password is not the README one; it lives in `~/apps/risktrack/.d
 ## Update to a new version
 
 ```bash
-# on your machine, from the repository
-git archive --format=tar.gz -o risktrack.tar.gz HEAD
+# on your machine, from the repository root (the app is the WS1-development/app folder)
+git archive --format=tar.gz -o risktrack.tar.gz HEAD:WS1-development/app
 scp -i ~/.ssh/watercheck-VM_key.pem risktrack.tar.gz azureuser@20.164.216.195:~/
 # on the VM
 cd ~/apps/risktrack && ~/apps/risktrack/deploy/vps/backup.sh

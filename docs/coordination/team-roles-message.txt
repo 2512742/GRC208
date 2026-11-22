@@ -1,0 +1,51 @@
+Hello Group 1 👋
+
+Good news first: RiskTrack is built and live at https://thealajo.tinex.tech (password in the private link I shared). First drafts of the report, slides, and abstract are ready here: pending is the video script with link to the shared Teams/OneDrive folder
+
+Now we need everyone in their role to review, test and finish. Here is who does what.
+
+COORDINATION (lead: Omotayo Akinola, with Ocen Richard)
+• Omotayo Akinola: main coordinator; schedules and chairs our meetings, keeps the task list
+• Ocen Richard: co-coordinator; supports Omotayo and follows up on technical tasks
+• Together: keep the contribution record and check everyone's E-Campus submission
+
+WS1 DEVELOPMENT (lead: Ocen Richard)
+• Emmanuel Teye Adjei: compare the screens with your prototype; list UI fixes
+• Kelechi Kenneth Nwankwo: check the demo data and tests; suggest missing cases
+• Ouabo Kamdem Derrick Arnaud: test the CSV import with your own good and bad files
+
+WS2 RISK FRAMEWORK (lead: Omotayo Akinola)
+• Adeola Bamigboye: write the ₦ impact ranges and scale descriptions (report 2.6)
+• Edna Moraa Maburi: review the wording of the 22 demo risks
+• Maria Nalima: confirm the regulatory clauses (NDPA, CBN, SEC, PCI DSS) and treatment actions
+
+WS3 TESTING (lead: Ebere Emilia Ikechukwu)
+• Ebere: run tests T01 to T32 on the live site; record actual results
+• Anita Ojimba: walk through the brief's demonstration steps; report any problem with a screenshot
+• Ernestina Lamiorkor Tawiah: try the security tests (auditor editing, self-approval, bad uploads); check the evidence screenshots
+
+WS4 DOCUMENTATION (lead: Ponsel Iliya)
+• Ponsel: edit the report, cover and section 1; final PDF
+• Gilbert Obichere: sections 2 and 3
+• Abdullahi Murtala Kawu: sections 4 and 5; check every reference link
+
+WS5 PRESENTATION (lead: Farida Baberin-Yor Beacher)
+• Farida: record the video from the script; prepare the defence questions; keep the presentation on track
+• Daniella Edinam Nyaletey: finish the slides
+• Deborah Orimikoya: finalise the abstract; help with the slides and organise the defence rehearsal
+
+EVERYONE
+1. Sign in to the live app and try your persona, so you can explain the whole system
+2. Write your own contribution and AI-use declaration in your own words
+3. Fill the [brackets] that belong to you in the report
+
+KEY DATES
+• 8 Dec: methodology final
+• 11 Dec: slides and video final
+• 12 Dec: report PDF final; everyone's contribution written
+• 13 Dec: defence rehearsal
+• 14 Dec: everyone clicks Final submit on E-Campus (keep ₦1,000 in your wallet)
+
+Want to help with the code? Send me your GitHub username: https://github.com/2512742/GRC208
+
+Questions? Ask here, or at Omotayo's next meeting. Thank you all! 🙏

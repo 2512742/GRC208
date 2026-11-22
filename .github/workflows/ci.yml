@@ -1,9 +1,12 @@
 name: CI
 
+# The app lives in WS1-development/app; only changes there run the tests.
 on:
   push:
     branches: [main]
+    paths: ["WS1-development/app/**", ".github/workflows/**"]
   pull_request:
+    paths: ["WS1-development/app/**", ".github/workflows/**"]
 
 permissions:
   contents: read
@@ -14,14 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: WS1-development/app/backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: backend/requirements*.txt
+          cache-dependency-path: WS1-development/app/backend/requirements*.txt
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
@@ -43,7 +46,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     defaults:
       run:
-        working-directory: backend
+        working-directory: WS1-development/app/backend
     env:
       TEST_DATABASE_URL: postgresql://risktrack:risktrack@localhost:5432/risktrack_test
     steps:
@@ -52,7 +55,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/requirements*.txt
+          cache-dependency-path: WS1-development/app/backend/requirements*.txt
       - run: pip install -r requirements-dev.txt
       - run: pytest
 
@@ -60,14 +63,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: WS1-development/app/frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: WS1-development/app/frontend/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
