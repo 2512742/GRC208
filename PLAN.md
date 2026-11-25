@@ -281,6 +281,8 @@ Removed from the prototype: the header "switch active user" dropdown (replaced b
 
 ### 2.6 Design system (adopted from Guardian's "Deep Intel", `guardian/design.md`)
 
+> **Colours changed on 26 Nov 2026:** colleagues disliked the green/teal, so the app now uses the Sentinel dashboard's light and dark palettes (neutral greys, blue accent `#0078D4` light / `#3f9cff` dark, red only for critical). Risk-band colours stay as data colours. The token values below are historical; the live values are in `WS1-development/app/frontend/src/theme/tokens.css`.
+
 - **Character:** minimalist, high-contrast, clinical. No gradients, no shadows, **0px corners** on cards, inputs, buttons and modals. Depth from 1px borders and tonal fills only.
 - **Font:** Inter only (Google Fonts, weights 400/500/600/700). Type scale: display 48/700, h1 32/700, h2 24/600, h3 20/600, body-lg 16/400, body-md 14/400, `label-caps` 12/700 uppercase with 0.08em tracking (table headers, field labels, metadata), `mono-data` 13/500 tabular numerals (IDs, scores, hashes, timestamps).
 - **Spacing:** 4px base unit (4, 8, 16, 24, 48); 12-column grid, 24px gutter; dense tables for analytics views.
@@ -697,3 +699,89 @@ Short answers for: why 1 to 5 scales and these bands; why appetite 10 (low appet
 | Demo dates going stale | Overdue/expired examples disappear | Relative dates; re-seed before recording |
 | Lost work | Missed deadline | Push daily; report copy outside the repo |
 | Late E-Campus submission or empty wallet | Zero marks for that member | Submit by 14 Dec; NGN 1,000 balance check; WS6 records receipts |
+
+---
+
+## 9. Change backlog (feedback of 22 to 26 Nov 2026)
+
+Raised by Omotayo Akinola (gaps against the brief), Emmanuel's updated prototype (`WS1-development/prototype/`, live preview https://sites.google.com/view/alajocyberriskreg/full-page-embed) and colleagues' design feedback. Status: **open** unless marked done.
+
+### 9.1 Decisions needed first (WS2, Adeola Bamigboye with Omotayo Akinola)
+
+| # | Decision | Options | Affects |
+|---|---|---|---|
+| D-1 | Where the Critical band starts | 15 (app now) or 16 (prototype) | Scoring code, heat map, report 2.6, slides |
+| D-2 | Top impact label | "Severe" (app now) or "Catastrophic" (prototype) | Scales, explanations, report, slides |
+| D-3 | Definitions for the 5 likelihood and 5 impact levels | Start from the prototype's (probability %, outage hours, loss ranges); convert $ ranges to ₦ | Rubric, report 2.6 |
+
+### 9.2 Application changes (WS1, Ocen Richard with Emmanuel Teye Adjei)
+
+**A. Inherent and residual risk (priority 1).** The app already keeps the first assessment and every reassessment (insert-only); the gap is naming and presentation.
+- Rename "Original" to **Inherent risk** and "Current" to **Residual risk** once a reassessment exists (before that: "Inherent, not yet reassessed"); "Target" stays.
+- Show inherent and residual side by side with the reduction (e.g. "Inherent 20 Critical → Residual 8 Medium, −12") on the risk page, the register, the management report (PDF and CSV columns) and the dashboard heat-map toggle (Inherent / Residual).
+- Label the history: first entry **Inherent**, then **Residual reassessment 1, 2, …**
+
+**B. Documented scoring methodology (priority 2).**
+- Store and show the definition of each likelihood and impact level (after D-3).
+- Add a **"View scoring rubric"** button on the register and in the assessment forms, and a **"How scoring works"** page (scales, bands, appetite, deadlines, the four governance controls).
+
+**C. Residual reassessment workflow (priority 3).** Already enforced: completion needs evidence and leaves the score unchanged ("Awaiting reassessment"); reassessment needs new likelihood and impact, a justification and evidence; the previous assessment is kept; only an analyst can reassess.
+- Link each reassessment to the completed action(s) it follows ("Reassessed after T-001 was completed"); this is the one data-model addition (new migration).
+- A **"Reassess now"** button inside the "Awaiting reassessment" notice; list the completed actions and their evidence in the reassessment form.
+- Show the change in the result ("Residual 8, was 20").
+
+**D. Design (done 26 Nov, commit `3028cd8`).** Sentinel palette in light and dark mode; teal removed. Open: decide whether the Low band stays green or becomes blue like Sentinel's "OK".
+
+### 9.3 Knock-on work
+
+| Item | Owner | When |
+|---|---|---|
+| Push local commits to GitHub | Ocen Richard | Now |
+| Delete the leftover `dev` branch on GitHub | Ocen Richard | Now |
+| Collect GitHub usernames and add collaborators | Coordinators | Before 27 Nov |
+| Redeploy https://thealajo.tinex.tech after the app changes (backup first; `deploy/vps/README.md`) | Ocen Richard | After 9.2 |
+| Re-seed so the demo history reads inherent → residual (R-001, R-013) | Ocen Richard | With the redeploy |
+| Retake screenshots E01 to E20 in the new colours and wording | Ernestina Lamiorkor Tawiah with Ocen | After the redeploy |
+| Update report sections 2.4 to 2.6 and 4 (inherent/residual wording, scale definitions, ₦ ranges, screenshots) | WS4 (Ponsel Iliya) | After D-1 to D-3 and the screenshots |
+| Update slides 5 to 7 and 10 | WS5 (Daniella Edinam Nyaletey) | Same |
+| Contributions uploaded to workstream folders | Everyone | 27 Nov, before the 29 Nov meeting |
+
+**Order:** WS2 decisions (9.1) → app changes A, then C, then B → redeploy and re-seed → screenshots → report and slides.
+
+---
+
+## 10. Developer workflow (local)
+
+`.env` points at the Neon **production** database, so every local command overrides it with the in-project SQLite file.
+
+**Check the built app** (one address):
+
+```bash
+cd "WS1-development/app/frontend" && npm run build
+cd ../backend
+DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" COOKIE_SECURE=false \
+  .venv/bin/uvicorn app.main:app --port 8000
+```
+
+Open http://127.0.0.1:8000. If the old look appears, the installed-app cache is serving the previous version: click **Reload** on the "new version" bar or press Ctrl+Shift+R.
+
+**Develop with live reload** (two terminals):
+
+```bash
+# Terminal 1: API
+cd "WS1-development/app/backend"
+DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" COOKIE_SECURE=false \
+  .venv/bin/uvicorn app.main:app --reload --port 8000
+
+# Terminal 2: interface
+cd "WS1-development/app/frontend" && npm run dev
+```
+
+Open http://localhost:5173; interface changes appear instantly.
+
+**Useful commands:**
+- Free port 8000: find the process with `ss -ltnp | grep :8000`, then `kill <pid>`.
+- Reset the demo data: `DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" .venv/bin/python -m app.cli seed-demo --reset --yes` (in `backend/`; demo password `Alajo-Demo-2026!`, local only).
+- Tests: `.venv/bin/pytest` in `backend/`, `npm test` in `frontend/`. Deadlines are judged in Lagos time (WAT), so tests take "today" in Africa/Lagos.
+- After moving the folder, recreate the Python environment: `rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt`.
+
