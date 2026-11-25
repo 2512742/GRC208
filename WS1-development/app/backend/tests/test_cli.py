@@ -94,3 +94,24 @@ def test_reset_password_cli(migrated_engine: Engine) -> None:
         assert account.must_change_password is True
     missing = runner.invoke(cli, ["reset-password", "--username", "ghost", "--yes"])
     assert missing.exit_code == 1
+
+
+def test_every_command_is_available_from_the_shell() -> None:
+    """`python -m app.cli` must register all commands before it runs (a command defined after
+    the main guard works in tests but is missing on the server)."""
+    import os
+    import subprocess
+    import sys
+
+    from tests.conftest import BACKEND_DIR
+
+    shown = subprocess.run(
+        [sys.executable, "-m", "app.cli", "--help"],
+        cwd=BACKEND_DIR,
+        capture_output=True,
+        text=True,
+        check=True,
+        env={**os.environ, "COLUMNS": "200"},
+    ).stdout
+    for name in cli.registered_commands:
+        assert name.name in shown, f"{name.name} missing from `python -m app.cli --help`"

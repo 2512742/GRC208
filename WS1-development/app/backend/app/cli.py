@@ -17,7 +17,12 @@ from app.core.config import get_settings
 from app.db import get_engine
 from app.models.enums import Role
 
-cli = typer.Typer(no_args_is_help=True, help="RiskTrack management commands")
+# Never show local variables in error output: they can hold database URLs with passwords.
+cli = typer.Typer(
+    no_args_is_help=True,
+    help="RiskTrack management commands",
+    pretty_exceptions_show_locals=False,
+)
 
 
 @cli.callback()
@@ -233,10 +238,6 @@ def export_openapi_command(
     typer.echo(f"Wrote {out}")
 
 
-if __name__ == "__main__":
-    cli()
-
-
 def _backup_url() -> str:
     url = get_settings().backup_database_url
     if not url:
@@ -293,3 +294,7 @@ def restore_from_backup_command(
         f"OK: {report.total} rows restored; audit chain intact ({report.audit_entries} entries). "
         "Stop the app, replace the live file with this one, then start it again."
     )
+
+
+if __name__ == "__main__":
+    cli()
