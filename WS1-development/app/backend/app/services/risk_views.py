@@ -17,8 +17,10 @@ from sqlmodel import Session, col, select
 
 from app.models import (
     AcceptanceRequest,
+    AssessmentAction,
     Asset,
     BusinessService,
+    Evidence,
     Obligation,
     Risk,
     RiskAssessment,
@@ -28,10 +30,18 @@ from app.models import (
     TreatmentDecision,
     User,
 )
-from app.models.enums import AcceptanceStatus, AssessmentType, Band, RiskStatus
+from app.models.enums import (
+    AcceptanceStatus,
+    ActionStatus,
+    AssessmentType,
+    Band,
+    EvidenceTarget,
+    RiskStatus,
+)
 from app.schemas.register import (
     AssessmentOut,
     AssetRef,
+    FollowedAction,
     ObligationOut,
     PersonRef,
     RiskDetail,
@@ -155,14 +165,15 @@ def build_summaries(
 
     owners = _people(session, {risk.owner_id for risk, _ in rows})
     assets_by_risk = _assets_by_risk(session, risk_ids)
-    originals = dict(
-        session.exec(
-            select(RiskAssessment.risk_id, RiskAssessment.score).where(
+    initials = {
+        row.risk_id: row
+        for row in session.exec(
+            select(RiskAssessment).where(
                 col(RiskAssessment.risk_id).in_(risk_ids),
                 RiskAssessment.assessment_type == AssessmentType.INITIAL.value,
             )
-        ).all()
-    )
+        )
+    }
 
     treatment = _treatment_state(session, risk_ids, today)
 
@@ -182,7 +193,14 @@ def build_summaries(
                 assets=assets,
                 services=sorted({a.service_code for a in assets}),
                 current=_score_summary(current, policy),
-                original_score=originals.get(risk.id),
+                original_score=initials[risk.id].score if risk.id in initials else None,
+                inherent=_score_summary(initials.get(risk.id), policy),  # type: ignore[arg-type]
+                residual=(
+                    _score_summary(current, policy)
+                    if current is not None
+                    and current.assessment_type != AssessmentType.INITIAL.value
+                    else None
+                ),
                 next_review_date=risk.next_review_date,
                 review_due_soon=review_is_upcoming(risk.next_review_date, today, policy),
                 display_status=display_risk_status(
@@ -250,6 +268,19 @@ def risk_detail(session: Session, risk: Risk) -> RiskDetail:
     )
     summary = build_summaries(session, [(risk, history[-1] if history else None)])[0]
     people = _people(session, {risk.created_by_id} | {a.assessed_by_id for a in history})
+    linked = select(AssessmentAction.action_id)
+    awaiting = list(
+        session.exec(
+            select(TreatmentAction)
+            .where(
+                TreatmentAction.risk_id == risk.id,
+                TreatmentAction.status == ActionStatus.COMPLETED.value,
+                col(TreatmentAction.id).not_in(linked),
+            )
+            .order_by(col(TreatmentAction.completed_at), col(TreatmentAction.id))
+        )
+    )
+    counts = _action_evidence_counts(session, [a.id for a in awaiting])  # type: ignore[misc]
     obligations = session.exec(
         select(Obligation)
         .join(RiskObligation, RiskObligation.obligation_id == Obligation.id)
@@ -263,11 +294,69 @@ def risk_detail(session: Session, risk: Risk) -> RiskDetail:
         vulnerability=risk.vulnerability,
         business_impact=risk.business_impact,
         obligations=[ObligationOut.model_validate(o) for o in obligations],
-        assessments=[assessment_out(a, people[a.assessed_by_id]) for a in history],
+        assessments=_history(session, history, people),
+        awaiting_reassessment_actions=[
+            _followed(a, counts)
+            for a in awaiting  # type: ignore[arg-type]
+        ],
         created_by=people[risk.created_by_id],
         created_at=risk.created_at,
         updated_at=risk.updated_at,
     )
+
+
+def _action_evidence_counts(session: Session, action_ids: list[int]) -> dict[int, int]:
+    if not action_ids:
+        return {}
+    return dict(
+        session.exec(  # type: ignore[arg-type]
+            select(Evidence.target_id, func.count())
+            .where(
+                Evidence.target_type == EvidenceTarget.ACTION.value,
+                col(Evidence.target_id).in_(action_ids),
+            )
+            .group_by(Evidence.target_id)
+        ).all()
+    )
+
+
+def _followed(action: TreatmentAction, counts: dict[int, int]) -> FollowedAction:
+    return FollowedAction(
+        id=action.id,  # type: ignore[arg-type]
+        action_code=action.action_code,
+        title=action.title,
+        completed_at=action.completed_at,
+        evidence_count=counts.get(action.id, 0),  # type: ignore[arg-type]
+    )
+
+
+def _history(
+    session: Session, rows: list[RiskAssessment], people: dict[int, PersonRef]
+) -> list[AssessmentOut]:
+    """The assessment history with inherent/residual labels, the score before each
+    reassessment and the completed actions each one followed."""
+    ids = [r.id for r in rows]
+    links: dict[int, list[TreatmentAction]] = defaultdict(list)
+    if ids:
+        for assessment_id, action in session.exec(
+            select(AssessmentAction.assessment_id, TreatmentAction)
+            .join(TreatmentAction, TreatmentAction.id == AssessmentAction.action_id)
+            .where(col(AssessmentAction.assessment_id).in_(ids))
+            .order_by(col(TreatmentAction.completed_at), col(TreatmentAction.id))
+        ):
+            links[assessment_id].append(action)
+    counts = _action_evidence_counts(session, [a.id for acts in links.values() for a in acts])  # type: ignore[misc]
+    out = []
+    previous: int | None = None
+    for sequence, row in enumerate(rows):
+        item = assessment_out(row, people[row.assessed_by_id])
+        item.sequence = sequence
+        item.label = "Inherent assessment" if sequence == 0 else f"Residual reassessment {sequence}"
+        item.previous_score = previous
+        item.follows_actions = [_followed(a, counts) for a in links.get(row.id, [])]  # type: ignore[arg-type]
+        out.append(item)
+        previous = row.score
+    return out
 
 
 def assessment_out(row: RiskAssessment, by: PersonRef) -> AssessmentOut:

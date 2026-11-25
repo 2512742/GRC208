@@ -95,8 +95,8 @@ export default function DashboardPage() {
           actions={
             <Tabs
               tabs={[
-                { key: "current", label: "Current" },
-                { key: "original", label: "Original" },
+                { key: "current", label: "Residual (current)" },
+                { key: "original", label: "Inherent" },
               ]}
               active={view}
               onChange={(k) => {
@@ -110,7 +110,7 @@ export default function DashboardPage() {
           {cell && (
             <div className="mt-4 border-t border-line pt-3" aria-live="polite">
               <div className="label-caps mb-2">
-                L{cell.likelihood} × I{cell.impact} = {cell.score} · {cell.count} risk{cell.count === 1 ? "" : "s"} ({view})
+                L{cell.likelihood} × I{cell.impact} = {cell.score} · {cell.count} risk{cell.count === 1 ? "" : "s"} ({view === "current" ? "residual, current" : "inherent"})
               </div>
               <div className="flex flex-wrap gap-2">
                 {cell.risk_codes.map((code) => (

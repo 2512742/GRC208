@@ -5,7 +5,8 @@ import type { AcceptanceOut } from "../api/types";
 import { navFor } from "../layout/nav";
 import { AcceptanceCard } from "../pages/RiskDetailPage";
 import { person, renderAs } from "../test/render";
-import { BandBadge, HeatMap, ScoreBadge } from "./risk";
+import { bandFor } from "../lib/format";
+import { BandBadge, HeatMap, InherentResidual, ScoreBadge, residualSummary } from "./risk";
 import { DateTime } from "./ui";
 
 const ROLE_PERMS: Record<string, string[]> = {
@@ -97,5 +98,36 @@ describe("acceptance SoD (U3)", () => {
     renderAs(<AcceptanceCard acceptance={pending} showRisk />, person("auditor", ROLE_PERMS.auditor));
     const card = screen.getByText(/Compensating controls/).closest(".card") as HTMLElement;
     expect(within(card).queryByRole("button")).toBeNull();
+  });
+});
+
+describe("inherent and residual risk", () => {
+  const score = (s: number) => ({
+    likelihood: 1,
+    impact: s,
+    score: s,
+    band: bandFor(s),
+    above_appetite: s >= 10,
+    explanation: "x",
+  });
+  it("summarises the residual against the inherent score", () => {
+    expect(residualSummary({ inherent: score(20), residual: null, original_score: 20 })).toBe(
+      "Inherent 20, not yet reassessed.",
+    );
+    expect(residualSummary({ inherent: score(20), residual: score(8), original_score: 20 })).toBe(
+      "Residual 8 (was 20 inherent), down 12.",
+    );
+    expect(residualSummary({ inherent: null, residual: null, original_score: null })).toBe("Not assessed yet.");
+  });
+
+  it("shows inherent then residual in the register", () => {
+    renderAs(<InherentResidual risk={{ inherent: score(20), residual: score(8), original_score: 20 }} />, null);
+    expect(screen.getByTitle("Inherent 20, residual 8")).toHaveTextContent("20 → 8");
+  });
+
+  it("offers the methodology page to every role", () => {
+    for (const role of Object.keys(ROLE_PERMS)) {
+      expect(navFor((p) => ROLE_PERMS[role].includes(p)).map((n) => n.label)).toContain("How scoring works");
+    }
   });
 });

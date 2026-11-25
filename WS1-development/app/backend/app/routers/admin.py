@@ -14,14 +14,17 @@ from app.core.auth import AuthContext, ensure, get_auth, require
 from app.core.permissions import Perm
 from app.db import get_session
 from app.models import AuditLog, Evidence, ImportBatch, User
-from app.models.enums import AuditAction, ImportType
+from app.models.enums import AuditAction, Band, ImportType
 from app.routers.evidence import read_upload
 from app.schemas.admin import (
     AuditEntryOut,
     AuditPage,
+    BandRule,
     ChainReportOut,
     ImportBatchOut,
     ImportRowResult,
+    Methodology,
+    ScaleLevel,
     SettingsOut,
     SettingsUpdate,
 )
@@ -30,6 +33,7 @@ from app.services import treatment as tr
 from app.services.clock import now_utc
 from app.services.evidence import EvidenceRejected, check_evidence
 from app.services.report import safe_cell
+from app.services.scoring import BAND_LABELS, IMPACT_LABELS, LIKELIHOOD_LABELS
 
 router = APIRouter(tags=["imports, audit and settings"])
 
@@ -308,10 +312,53 @@ SETTING_FIELDS = tuple(SettingsOut.model_fields.keys() - {"updated_at", "updated
 def _settings_out(db: Session) -> SettingsOut:
     row = governance.app_setting(db)
     by = db.get(User, row.updated_by_id) if row.updated_by_id else None
-    return SettingsOut(
-        **{f: getattr(row, f) for f in SETTING_FIELDS},
-        updated_at=row.updated_at,
-        updated_by=by.full_name if by else None,
+    likelihood, impact = governance.level_definitions(row)
+    values = {f: getattr(row, f) for f in SETTING_FIELDS}
+    values.update(likelihood_definitions=likelihood, impact_definitions=impact)
+    return SettingsOut(**values, updated_at=row.updated_at, updated_by=by.full_name if by else None)
+
+
+@router.get("/methodology", response_model=Methodology)
+def methodology(
+    _: AuthContext = Depends(get_auth), db: Session = Depends(get_session)
+) -> Methodology:
+    """The documented scoring method (brief feature 2): scales with their definitions, rating
+    bands with remediation deadlines and review cycles, and the appetite threshold."""
+    row = governance.app_setting(db)
+    policy = governance.policy(db)
+    likelihood, impact = governance.level_definitions(row)
+    ranges = {Band.LOW: (1, 4), Band.MEDIUM: (5, 9), Band.HIGH: (10, 14), Band.CRITICAL: (15, 25)}
+    return Methodology(
+        formula="Risk score = likelihood × impact (each 1 to 5), giving 1 to 25.",
+        appetite_threshold=policy.appetite_threshold,
+        appetite_statement=(
+            "The Alajo has a low appetite for loss of customer funds, exposure of customer data "
+            f"and regulatory breach. Any score of {policy.appetite_threshold} or more is above "
+            "appetite and must be treated or formally accepted; lower scores may be managed by "
+            "the risk owner."
+        ),
+        likelihood=[
+            ScaleLevel(level=i, label=LIKELIHOOD_LABELS[i], definition=likelihood[i - 1])
+            for i in range(1, 6)
+        ],
+        impact=[
+            ScaleLevel(level=i, label=IMPACT_LABELS[i], definition=impact[i - 1])
+            for i in range(1, 6)
+        ],
+        bands=[
+            BandRule(
+                band=band.value,
+                label=BAND_LABELS[band],
+                min_score=low,
+                max_score=high,
+                above_appetite=low >= policy.appetite_threshold,
+                remediation_days=policy.sla_days(band),
+                review_days=policy.review_days(band),
+            )
+            for band, (low, high) in sorted(ranges.items(), key=lambda kv: -kv[1][0])
+        ],
+        review_warning_days=policy.review_warning_days,
+        org_timezone=row.org_timezone,
     )
 
 

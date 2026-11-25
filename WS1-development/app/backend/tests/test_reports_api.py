@@ -126,6 +126,19 @@ def test_t18_csv_export_filtered_stamped_and_audited(
     assert "band=critical" in (entry.detail or "")
 
 
+def test_csv_inherent_and_residual_columns(seeded_api: TestClient) -> None:
+    sign_in(seeded_api, "kelechi")
+    text = seeded_api.get("/api/reports/management.csv").content.decode("utf-8-sig")
+    rows = list(csv.DictReader(line for line in text.splitlines() if not line.startswith("#")))
+    assert all(r["inherent_score"] for r in rows)
+    reassessed = [r for r in rows if r["residual_score"]]
+    assert reassessed, "the demo data has reassessed risks"
+    for r in reassessed:
+        assert r["residual_score"] == r["score"]
+        assert int(r["reduction"]) == int(r["inherent_score"]) - int(r["residual_score"])
+    assert all(r["reduction"] == "" for r in rows if not r["residual_score"])
+
+
 def test_t18_pdf_export(seeded_api: TestClient) -> None:
     sign_in(seeded_api, "ernestina")
     response = seeded_api.get("/api/reports/management.pdf")

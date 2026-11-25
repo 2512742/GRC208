@@ -71,7 +71,11 @@ def to_csv(data: Overview, stamp: Stamp) -> str:
             "score",
             "band",
             "above_appetite",
-            "original_score",
+            "inherent_score",
+            "inherent_band",
+            "residual_score",
+            "residual_band",
+            "reduction",
             "strategy",
             "open_actions",
             "overdue_actions",
@@ -97,7 +101,11 @@ def to_csv(data: Overview, stamp: Stamp) -> str:
                     current.score if current else "",
                     current.band.value if current else "",
                     "yes" if current and current.above_appetite else "no",
-                    r.original_score if r.original_score is not None else "",
+                    r.inherent.score if r.inherent else "",
+                    r.inherent.band.value if r.inherent else "",
+                    r.residual.score if r.residual else "",
+                    r.residual.band.value if r.residual else "",
+                    (r.inherent.score - r.residual.score) if r.inherent and r.residual else "",
                     r.strategy or "",
                     r.open_actions,
                     r.overdue_actions,
@@ -294,16 +302,28 @@ def to_pdf(data: Overview, stamp: Stamp) -> bytes:
 
     pdf.add_page()
     pdf.heading(f"Appendix: risk register ({len(data.risks)})")
+    pdf.multi_cell(
+        0,
+        5,
+        latin1(
+            "Inh. = inherent score (first assessment, before treatment). Res. = residual score "
+            "after the latest evidenced reassessment ('-' = not yet reassessed). "
+            "Band = current band."
+        ),
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+    pdf.ln(1)
     pdf.table(
-        ["Code", "Title", "Owner", "Orig.", "Now", "Band", "Strategy", "Status"],
+        ["Code", "Title", "Owner", "Inh.", "Res.", "Band", "Strategy", "Status"],
         [14, 62, 30, 11, 11, 16, 17, 29],
         [
             [
                 r.risk_code,
                 r.title,
                 r.owner.full_name,
-                r.original_score if r.original_score is not None else "",
-                r.current.score if r.current else "",
+                r.inherent.score if r.inherent else "",
+                r.residual.score if r.residual else "-",
                 r.current.band.value if r.current else "",
                 r.strategy or "",
                 r.display_status,

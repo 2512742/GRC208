@@ -4,11 +4,24 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useSettings } from "../api/queries";
 import type { SettingsOut } from "../api/types";
+import { IMPACT_LABELS, LIKELIHOOD_LABELS } from "../lib/format";
 import { useToast } from "../components/Toast";
-import { Card, DateTime, ErrorState, KeyValue, Loading, Notice, PageHeader, TextField } from "../components/ui";
+import { Card, DateTime, ErrorState, KeyValue, Loading, Notice, PageHeader, TextArea, TextField } from "../components/ui";
 import { useSecurity } from "./AccountPage";
 
-type Key = Exclude<keyof SettingsOut, "updated_at" | "updated_by" | "org_timezone">;
+type Key = Exclude<
+  keyof SettingsOut,
+  "updated_at" | "updated_by" | "org_timezone" | "likelihood_definitions" | "impact_definitions"
+>;
+type DefKey = "likelihood_definitions" | "impact_definitions";
+
+const SCALES: { key: DefKey; title: string; labels: Record<number, string> }[] = [
+  { key: "likelihood_definitions", title: "Likelihood level definitions", labels: LIKELIHOOD_LABELS },
+  { key: "impact_definitions", title: "Impact level definitions", labels: IMPACT_LABELS },
+];
+
+const sameList = (a: string[] | undefined, b: string[] | undefined) =>
+  !!a && !!b && a.length === b.length && a.every((v, i) => v.trim() === b[i]);
 
 const GROUPS: { title: string; fields: [Key, string, number, number][] }[] = [
   { title: "Risk appetite", fields: [["appetite_threshold", "Appetite threshold (score)", 1, 25]] },
@@ -37,30 +50,42 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const settings = useSettings();
   const [values, setValues] = useState<Partial<Record<Key, number>>>({});
+  const [defs, setDefs] = useState<Partial<Record<DefKey, string[]>>>({});
 
   useEffect(() => {
     if (settings.data) {
       const next: Partial<Record<Key, number>> = {};
       for (const g of GROUPS) for (const [k] of g.fields) next[k] = settings.data[k];
       setValues(next);
+      setDefs({
+        likelihood_definitions: [...settings.data.likelihood_definitions],
+        impact_definitions: [...settings.data.impact_definitions],
+      });
     }
   }, [settings.data]);
 
   const save = useMutation({
     mutationFn: () => {
-      const changed = Object.fromEntries(Object.entries(values).filter(([k, v]) => settings.data?.[k as Key] !== v));
+      const changed: Record<string, unknown> = Object.fromEntries(
+        Object.entries(values).filter(([k, v]) => settings.data?.[k as Key] !== v),
+      );
+      for (const { key } of SCALES) {
+        if (!sameList(defs[key], settings.data?.[key])) changed[key] = defs[key]?.map((d) => d.trim());
+      }
       return api.patch<SettingsOut>("/settings", changed);
     },
     onSuccess: (s) => {
       qc.setQueryData(["settings"], s);
-      for (const k of ["dashboard", "risks", "risk"]) qc.invalidateQueries({ queryKey: [k] });
+      for (const k of ["dashboard", "risks", "risk", "methodology"]) qc.invalidateQueries({ queryKey: [k] });
       toast.success("Settings saved and recorded in the audit log.");
     },
   });
 
   if (settings.isLoading) return <Loading />;
   if (settings.error || !settings.data) return <ErrorState error={settings.error} />;
-  const dirty = Object.entries(values).some(([k, v]) => settings.data[k as Key] !== v);
+  const dirty =
+    Object.entries(values).some(([k, v]) => settings.data[k as Key] !== v) ||
+    SCALES.some(({ key }) => !sameList(defs[key], settings.data[key]));
 
   return (
     <>
@@ -99,6 +124,34 @@ export default function SettingsPage() {
                   max={max}
                   value={values[key] ?? ""}
                   onChange={(e) => setValues((v) => ({ ...v, [key]: Number(e.target.value) }))}
+                />
+              ))}
+            </div>
+          </Card>
+        ))}
+        {SCALES.map(({ key, title, labels }) => (
+          <Card key={key} title={title}>
+            <p className="mb-3 text-sm text-muted">
+              Shown in the scoring rubric and on the How scoring works page. Write one definition per level (for
+              example the outage hours and ₦ loss range agreed by the risk framework team).
+            </p>
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <TextArea
+                  key={i}
+                  label={`${i + 1} · ${labels[i + 1]}`}
+                  required
+                  minLength={3}
+                  maxLength={300}
+                  rows={2}
+                  value={defs[key]?.[i] ?? ""}
+                  onChange={(e) =>
+                    setDefs((d) => {
+                      const list = [...(d[key] ?? [])];
+                      list[i] = e.target.value;
+                      return { ...d, [key]: list };
+                    })
+                  }
                 />
               ))}
             </div>

@@ -1,5 +1,5 @@
 /** Risk-specific display pieces: band badge, score, status chip, explanation, heat map. */
-import type { Band, HeatCell, ScoreSummary } from "../api/types";
+import type { Band, HeatCell, RiskSummary, ScoreSummary } from "../api/types";
 import { IMPACT_LABELS, LIKELIHOOD_LABELS, bandFor, sentenceCase, titleCase } from "../lib/format";
 import { cx } from "./ui";
 
@@ -41,6 +41,35 @@ export function ScoreBadge({ score }: { score: ScoreSummary | null | undefined }
       )}
     </span>
   );
+}
+
+/** "20 → 8" once reassessed, otherwise "20, not reassessed". */
+export function InherentResidual({ risk }: { risk: Pick<RiskSummary, "inherent" | "residual" | "original_score"> }) {
+  const inherent = risk.inherent?.score ?? risk.original_score;
+  if (inherent == null) return <span className="text-muted">—</span>;
+  return (
+    <span className="whitespace-nowrap text-sm" title={risk.residual ? `Inherent ${inherent}, residual ${risk.residual.score}` : `Inherent ${inherent}, not yet reassessed`}>
+      <span className="mono-data font-semibold">{inherent}</span>
+      {risk.residual ? (
+        <>
+          {" → "}
+          <span className="mono-data font-semibold">{risk.residual.score}</span>
+        </>
+      ) : (
+        <span className="text-xs text-muted">, not reassessed</span>
+      )}
+    </span>
+  );
+}
+
+/** "Residual 8 (was 20), down 12" or "Inherent 20, not yet reassessed". */
+export function residualSummary(risk: Pick<RiskSummary, "inherent" | "residual" | "original_score">): string {
+  const inherent = risk.inherent?.score ?? risk.original_score;
+  if (inherent == null) return "Not assessed yet.";
+  if (!risk.residual) return `Inherent ${inherent}, not yet reassessed.`;
+  const change = inherent - risk.residual.score;
+  const trend = change > 0 ? `, down ${change}` : change < 0 ? `, up ${-change}` : ", unchanged";
+  return `Residual ${risk.residual.score} (was ${inherent} inherent)${trend}.`;
 }
 
 const STRONG_STATUSES = new Set(["overdue", "expired", "acceptance_expired", "rejected", "blocked"]);

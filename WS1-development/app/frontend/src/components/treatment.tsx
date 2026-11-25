@@ -18,6 +18,7 @@ import type {
 } from "../api/types";
 import { IMPACT_LABELS, LIKELIHOOD_LABELS, bandFor, formatBytes, previewExplanation, titleCase } from "../lib/format";
 import { isoDay } from "../lib/time";
+import { RubricToggle } from "./methodology";
 import { Modal } from "./Modal";
 import { BandBadge, Explanation } from "./risk";
 import { useToast } from "./Toast";
@@ -139,6 +140,7 @@ export function AssessmentInputs({
         <span className="text-xs text-muted">Preview; the server calculates and stores the result.</span>
       </div>
       <Explanation text={previewExplanation(likelihood, impact, settings.data)} />
+      <RubricToggle likelihood={likelihood} impact={impact} />
     </div>
   );
 }
@@ -392,7 +394,7 @@ export function ReassessDialog({ risk, open, onClose }: { risk: RiskDetail; open
       return api.upload<ReassessmentOut>(`/risks/${risk.id}/reassessments`, form);
     },
     onSuccess: (r) => {
-      toast.success(`${risk.risk_code} reassessed: ${r.original_score ?? "?"} → ${r.score}.`);
+      toast.success(`${risk.risk_code} reassessed: residual ${r.score} (was ${risk.current?.score ?? "?"}).`);
       refresh();
       onClose();
     },
@@ -409,8 +411,32 @@ export function ReassessDialog({ risk, open, onClose }: { risk: RiskDetail; open
       >
         {m.error && <Notice tone="danger">{errorText(m.error)}</Notice>}
         <div className="text-sm text-muted">
-          Current: <span className="mono-data">{risk.current ? `${risk.current.likelihood}×${risk.current.impact}=${risk.current.score}` : "not assessed"}</span>
-          {" · "}Original: <span className="mono-data">{risk.original_score ?? "—"}</span>. The earlier assessments stay in the history unchanged.
+          {risk.residual ? "Residual" : "Inherent"} now:{" "}
+          <span className="mono-data">{risk.current ? `${risk.current.likelihood}×${risk.current.impact}=${risk.current.score}` : "not assessed"}</span>
+          {risk.residual && (
+            <>
+              {" · "}Inherent: <span className="mono-data">{risk.inherent?.score ?? risk.original_score ?? "—"}</span>
+            </>
+          )}
+          . The earlier assessments stay in the history unchanged.
+        </div>
+        <div>
+          <div className="label-caps mb-1">Completed actions this reassessment follows</div>
+          {(risk.awaiting_reassessment_actions ?? []).length ? (
+            <ul className="flex flex-col gap-1 border border-line p-2 text-sm" data-testid="followed-actions">
+              {(risk.awaiting_reassessment_actions ?? []).map((a) => (
+                <li key={a.id}>
+                  <span className="mono-data font-semibold">{a.action_code}</span> {a.title}{" "}
+                  <span className="text-xs text-muted">
+                    (completed <DateTime iso={a.completed_at} />, {a.evidence_count} evidence file{a.evidence_count === 1 ? "" : "s"})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">No newly completed actions. This is a periodic reassessment.</p>
+          )}
+          <p className="mt-1 text-xs text-muted">They are linked to this reassessment when you save it.</p>
         </div>
         <AssessmentInputs likelihood={likelihood} impact={impact} setLikelihood={setLikelihood} setImpact={setImpact} />
         <TextArea label="Rationale" required minLength={10} value={rationale} onChange={(e) => setRationale(e.target.value)} hint="Why the scores changed, citing the evidence." />

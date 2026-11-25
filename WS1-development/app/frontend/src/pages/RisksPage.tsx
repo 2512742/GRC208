@@ -7,7 +7,8 @@ import { api } from "../api/client";
 import { useObligations, useServices, useUsers } from "../api/queries";
 import type { RiskPage, RiskSummary } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { ScoreBadge, StatusChip } from "../components/risk";
+import { ScoreBadge, StatusChip, InherentResidual } from "../components/risk";
+import { RubricToggle } from "../components/methodology";
 import { DataTable, DateOnly, ErrorState, Loading, PageHeader, Pagination } from "../components/ui";
 import type { Column } from "../components/ui";
 import { BANDS, titleCase } from "../lib/format";
@@ -71,10 +72,9 @@ export default function RisksPage() {
     { key: "title", header: "Risk", render: (r) => <span className="font-medium">{r.title}</span>, className: "w-[30%]" },
     { key: "score", header: "Current score", render: (r) => <ScoreBadge score={r.current} />, hideOnMobile: true },
     {
-      key: "original",
-      header: "Original",
-      render: (r) => <span className="mono-data">{r.original_score ?? "—"}</span>,
-      hideOnMobile: true,
+      key: "inherent",
+      header: "Inherent → Residual",
+      render: (r) => <InherentResidual risk={r} />,
     },
     { key: "owner", header: "Owner", render: (r) => r.owner.full_name },
     {
@@ -114,6 +114,10 @@ export default function RisksPage() {
           )
         }
       />
+
+      <div className="mb-3">
+        <RubricToggle />
+      </div>
 
       <div className="card mb-4 grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <div className="flex gap-2 sm:col-span-2 lg:col-span-1 xl:col-span-2">

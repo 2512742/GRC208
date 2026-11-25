@@ -6,7 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { AcceptanceOut, ActionOut, AuditPage, DecisionOut, RiskDetail, RiskPage } from "../api/types";
 import { useAuth, useMe } from "../auth/AuthContext";
-import { BandBadge, Explanation, ScoreBadge, StatusChip } from "../components/risk";
+import { BandBadge, Explanation, ScoreBadge, StatusChip, residualSummary } from "../components/risk";
 import {
   ActionDialog,
   CompleteActionDialog,
@@ -111,8 +111,29 @@ export default function RiskDetailPage() {
       {risk.status === "awaiting_reassessment" && (
         <div className="mb-4">
           <Notice tone="warning" title="Awaiting reassessment">
-            A treatment action was completed with evidence. The score stays as it is until an analyst reassesses
-            the risk with supporting evidence.
+            <p>
+              {(risk.awaiting_reassessment_actions ?? []).length > 1 ? "Treatment actions were" : "A treatment action was"}{" "}
+              completed with evidence. The score stays as it is until an analyst reassesses the risk with supporting
+              evidence.
+            </p>
+            {(risk.awaiting_reassessment_actions ?? []).length > 0 && (
+              <ul className="mt-2 flex flex-col gap-1">
+                {(risk.awaiting_reassessment_actions ?? []).map((a) => (
+                  <li key={a.id}>
+                    <span className="mono-data font-semibold">{a.action_code}</span> {a.title}{" "}
+                    <span className="text-xs text-muted">
+                      (completed <DateTime iso={a.completed_at} />, {a.evidence_count} evidence file
+                      {a.evidence_count === 1 ? "" : "s"})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {isAnalyst && (
+              <button type="button" className="btn-primary btn-sm mt-3" onClick={() => setDialog("reassess")}>
+                Reassess now
+              </button>
+            )}
           </Notice>
         </div>
       )}
@@ -132,10 +153,13 @@ export default function RiskDetailPage() {
               <ScoreBadge score={risk.current} />
               <Explanation text={risk.current.explanation} />
               <div className="grid grid-cols-3 gap-3 text-center">
-                <ScoreBox label="Original" score={risk.original_score} />
+                <ScoreBox label="Inherent" score={risk.inherent?.score ?? risk.original_score} />
                 <ScoreBox label="Target" score={latestDecision?.target_score ?? null} />
-                <ScoreBox label="Current" score={risk.current.score} />
+                <ScoreBox label="Residual" score={risk.residual?.score} empty="not yet reassessed" />
               </div>
+              <p className="text-sm text-muted" data-testid="residual-summary">
+                {residualSummary(risk)}
+              </p>
             </div>
           ) : (
             <EmptyState title="Not assessed yet">
@@ -221,10 +245,13 @@ export default function RiskDetailPage() {
               {assessments.map((a) => (
                 <div key={a.id} className="card p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="chip">{a.assessment_type === "initial" ? "Initial" : "Reassessment"}</span>
+                    <span className="chip">{a.label}</span>
                     <span className="mono-data font-bold">
                       {a.likelihood}×{a.impact}={a.score}
                     </span>
+                    {a.previous_score != null && (
+                      <span className="text-sm text-muted">(was {a.previous_score})</span>
+                    )}
                     <BandBadge band={a.band} />
                     {a.above_appetite && <span className="chip-strong">Above appetite</span>}
                     <span className="ml-auto text-xs text-muted">
@@ -233,6 +260,20 @@ export default function RiskDetailPage() {
                   </div>
                   <p className="mt-2 text-sm">{a.explanation}</p>
                   <p className="mt-1 whitespace-pre-line text-sm text-muted">{a.rationale}</p>
+                  {(a.follows_actions ?? []).length > 0 && (
+                    <div className="mt-2 text-sm">
+                      <span className="label-caps">After </span>
+                      {(a.follows_actions ?? []).map((f, i) => (
+                        <span key={f.id}>
+                          {i > 0 && ", "}
+                          <span className="mono-data font-semibold" title={f.title}>
+                            {f.action_code}
+                          </span>{" "}
+                          {f.title}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {a.assessment_type !== "initial" && (
                     <div className="mt-3">
                       <div className="label-caps mb-1">Evidence</div>
@@ -243,7 +284,8 @@ export default function RiskDetailPage() {
               ))}
               {initial && assessments.length > 1 && (
                 <p className="text-xs text-muted">
-                  Assessments are insert-only: a reassessment adds a new row and the original ({initial.score}) is kept.
+                  Assessments are insert-only: a reassessment adds a new row and the inherent score ({initial.score}) is
+                  kept.
                 </p>
               )}
             </div>
@@ -338,12 +380,12 @@ export default function RiskDetailPage() {
   );
 }
 
-function ScoreBox({ label, score }: { label: string; score: number | null | undefined }) {
+function ScoreBox({ label, score, empty = "not set" }: { label: string; score: number | null | undefined; empty?: string }) {
   return (
     <div className="border border-line p-3">
       <div className="label-caps">{label}</div>
       <div className="mono-data mt-1 text-2xl font-bold">{score ?? "—"}</div>
-      {score ? <BandBadge band={bandFor(score)} /> : <span className="text-xs text-muted">not set</span>}
+      {score ? <BandBadge band={bandFor(score)} /> : <span className="text-xs text-muted">{empty}</span>}
     </div>
   );
 }

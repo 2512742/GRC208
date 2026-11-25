@@ -679,6 +679,14 @@
             "title": "Explanation",
             "type": "string"
           },
+          "follows_actions": {
+            "description": "Completed actions this reassessment followed",
+            "items": {
+              "$ref": "#/components/schemas/FollowedAction"
+            },
+            "title": "Follows Actions",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -687,9 +695,27 @@
             "title": "Impact",
             "type": "integer"
           },
+          "label": {
+            "default": "",
+            "description": "'Inherent assessment' or 'Residual reassessment n'",
+            "title": "Label",
+            "type": "string"
+          },
           "likelihood": {
             "title": "Likelihood",
             "type": "integer"
+          },
+          "previous_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Score before this reassessment",
+            "title": "Previous Score"
           },
           "rationale": {
             "title": "Rationale",
@@ -697,6 +723,12 @@
           },
           "score": {
             "title": "Score",
+            "type": "integer"
+          },
+          "sequence": {
+            "default": 0,
+            "description": "0 = inherent; 1, 2, ... = residual reassessments",
+            "title": "Sequence",
             "type": "integer"
           }
         },
@@ -1205,6 +1237,56 @@
         "title": "Band",
         "type": "string"
       },
+      "BandRule": {
+        "properties": {
+          "above_appetite": {
+            "title": "Above Appetite",
+            "type": "boolean"
+          },
+          "band": {
+            "title": "Band",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max_score": {
+            "title": "Max Score",
+            "type": "integer"
+          },
+          "min_score": {
+            "title": "Min Score",
+            "type": "integer"
+          },
+          "remediation_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remediation Days"
+          },
+          "review_days": {
+            "title": "Review Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "band",
+          "label",
+          "min_score",
+          "max_score",
+          "above_appetite",
+          "remediation_days",
+          "review_days"
+        ],
+        "title": "BandRule",
+        "type": "object"
+      },
       "Body_complete_action_api_actions__action_id__complete_post": {
         "properties": {
           "file": {
@@ -1687,6 +1769,48 @@
         "title": "EvidenceTarget",
         "type": "string"
       },
+      "FollowedAction": {
+        "description": "A completed treatment action, as referenced from the residual-risk history.",
+        "properties": {
+          "action_code": {
+            "title": "Action Code",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "evidence_count": {
+            "default": 0,
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "action_code",
+          "title",
+          "completed_at"
+        ],
+        "title": "FollowedAction",
+        "type": "object"
+      },
       "Framework": {
         "enum": [
           "NIST-CSF-2.0",
@@ -2054,6 +2178,64 @@
           "csrf_token"
         ],
         "title": "Me",
+        "type": "object"
+      },
+      "Methodology": {
+        "description": "Everything the \"How scoring works\" page and the scoring rubric show.",
+        "properties": {
+          "appetite_statement": {
+            "title": "Appetite Statement",
+            "type": "string"
+          },
+          "appetite_threshold": {
+            "title": "Appetite Threshold",
+            "type": "integer"
+          },
+          "bands": {
+            "items": {
+              "$ref": "#/components/schemas/BandRule"
+            },
+            "title": "Bands",
+            "type": "array"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "impact": {
+            "items": {
+              "$ref": "#/components/schemas/ScaleLevel"
+            },
+            "title": "Impact",
+            "type": "array"
+          },
+          "likelihood": {
+            "items": {
+              "$ref": "#/components/schemas/ScaleLevel"
+            },
+            "title": "Likelihood",
+            "type": "array"
+          },
+          "org_timezone": {
+            "title": "Org Timezone",
+            "type": "string"
+          },
+          "review_warning_days": {
+            "title": "Review Warning Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formula",
+          "appetite_threshold",
+          "appetite_statement",
+          "likelihood",
+          "impact",
+          "bands",
+          "review_warning_days",
+          "org_timezone"
+        ],
+        "title": "Methodology",
         "type": "object"
       },
       "ObligationCreate": {
@@ -2684,6 +2866,14 @@
             "title": "Assets",
             "type": "array"
           },
+          "awaiting_reassessment_actions": {
+            "description": "Completed actions no reassessment has followed yet",
+            "items": {
+              "$ref": "#/components/schemas/FollowedAction"
+            },
+            "title": "Awaiting Reassessment Actions",
+            "type": "array"
+          },
           "business_impact": {
             "title": "Business Impact",
             "type": "string"
@@ -2730,6 +2920,17 @@
             "title": "Id",
             "type": "integer"
           },
+          "inherent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The first (inherent) assessment, before any treatment"
+          },
           "next_review_date": {
             "anyOf": [
               {
@@ -2772,6 +2973,17 @@
           },
           "owner": {
             "$ref": "#/components/schemas/PersonRef"
+          },
+          "residual": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest residual reassessment; null until one exists"
           },
           "review_due_soon": {
             "title": "Review Due Soon",
@@ -2911,6 +3123,17 @@
             "title": "Id",
             "type": "integer"
           },
+          "inherent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The first (inherent) assessment, before any treatment"
+          },
           "next_review_date": {
             "anyOf": [
               {
@@ -2946,6 +3169,17 @@
           },
           "owner": {
             "$ref": "#/components/schemas/PersonRef"
+          },
+          "residual": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest residual reassessment; null until one exists"
           },
           "review_due_soon": {
             "title": "Review Due Soon",
@@ -3146,6 +3380,29 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "ScaleLevel": {
+        "properties": {
+          "definition": {
+            "title": "Definition",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "level",
+          "label",
+          "definition"
+        ],
+        "title": "ScaleLevel",
+        "type": "object"
       },
       "ScoreSummary": {
         "properties": {
@@ -3508,6 +3765,20 @@
             "title": "Appetite Threshold",
             "type": "integer"
           },
+          "impact_definitions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Impact Definitions",
+            "type": "array"
+          },
+          "likelihood_definitions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Likelihood Definitions",
+            "type": "array"
+          },
           "org_timezone": {
             "title": "Org Timezone",
             "type": "string"
@@ -3572,6 +3843,8 @@
           "review_days_medium",
           "review_days_low",
           "org_timezone",
+          "likelihood_definitions",
+          "impact_definitions",
           "updated_at",
           "updated_by"
         ],
@@ -3592,6 +3865,36 @@
               }
             ],
             "title": "Appetite Threshold"
+          },
+          "impact_definitions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exactly five texts, level 1 first; include the \u20a6 ranges",
+            "title": "Impact Definitions"
+          },
+          "likelihood_definitions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exactly five texts, level 1 first",
+            "title": "Likelihood Definitions"
           },
           "org_timezone": {
             "anyOf": [
@@ -6137,6 +6440,28 @@
         "summary": "Sign Out Session",
         "tags": [
           "my account"
+        ]
+      }
+    },
+    "/api/methodology": {
+      "get": {
+        "description": "The documented scoring method (brief feature 2): scales with their definitions, rating\nbands with remediation deadlines and review cycles, and the appetite threshold.",
+        "operationId": "methodology_api_methodology_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Methodology"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Methodology",
+        "tags": [
+          "imports, audit and settings"
         ]
       }
     },

@@ -8,7 +8,12 @@ from sqlmodel import Session
 
 from app.models import AppSetting
 from app.services import clock
-from app.services.scoring import GovernancePolicy
+from app.services.scoring import (
+    DEFAULT_IMPACT_DEFINITIONS,
+    DEFAULT_LIKELIHOOD_DEFINITIONS,
+    LEVEL_COUNT,
+    GovernancePolicy,
+)
 
 
 def app_setting(session: Session) -> AppSetting:
@@ -24,3 +29,17 @@ def policy(session: Session) -> GovernancePolicy:
 
 def org_today(session: Session) -> date:
     return clock.org_today(app_setting(session).org_timezone)
+
+
+def level_definitions(setting: AppSetting) -> tuple[list[str], list[str]]:
+    """(likelihood, impact) definitions for levels 1 to 5: the settings, or the defaults."""
+
+    def pick(stored: list[str] | None, default: tuple[str, ...]) -> list[str]:
+        if stored and len(stored) == LEVEL_COUNT and all(isinstance(t, str) for t in stored):
+            return list(stored)
+        return list(default)
+
+    return (
+        pick(setting.likelihood_definitions, DEFAULT_LIKELIHOOD_DEFINITIONS),
+        pick(setting.impact_definitions, DEFAULT_IMPACT_DEFINITIONS),
+    )

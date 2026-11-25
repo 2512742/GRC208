@@ -716,16 +716,16 @@ Raised by Omotayo Akinola (gaps against the brief), Emmanuel's updated prototype
 
 ### 9.2 Application changes (WS1, Ocen Richard with Emmanuel Teye Adjei)
 
-**A. Inherent and residual risk (priority 1).** The app already keeps the first assessment and every reassessment (insert-only); the gap is naming and presentation.
+**A. Inherent and residual risk (priority 1). Done 26 Nov.** The app already keeps the first assessment and every reassessment (insert-only); the gap is naming and presentation.
 - Rename "Original" to **Inherent risk** and "Current" to **Residual risk** once a reassessment exists (before that: "Inherent, not yet reassessed"); "Target" stays.
 - Show inherent and residual side by side with the reduction (e.g. "Inherent 20 Critical → Residual 8 Medium, −12") on the risk page, the register, the management report (PDF and CSV columns) and the dashboard heat-map toggle (Inherent / Residual).
 - Label the history: first entry **Inherent**, then **Residual reassessment 1, 2, …**
 
-**B. Documented scoring methodology (priority 2).**
+**B. Documented scoring methodology (priority 2). Done 26 Nov:** the definitions are editable by the administrator in Settings, so WS2's final wording and ₦ ranges (D-3) need no code change.
 - Store and show the definition of each likelihood and impact level (after D-3).
 - Add a **"View scoring rubric"** button on the register and in the assessment forms, and a **"How scoring works"** page (scales, bands, appetite, deadlines, the four governance controls).
 
-**C. Residual reassessment workflow (priority 3).** Already enforced: completion needs evidence and leaves the score unchanged ("Awaiting reassessment"); reassessment needs new likelihood and impact, a justification and evidence; the previous assessment is kept; only an analyst can reassess.
+**C. Residual reassessment workflow (priority 3). Done 26 Nov** (migration `84070bc4c4e0`, table `assessment_action`, insert-only). Already enforced: completion needs evidence and leaves the score unchanged ("Awaiting reassessment"); reassessment needs new likelihood and impact, a justification and evidence; the previous assessment is kept; only an analyst can reassess.
 - Link each reassessment to the completed action(s) it follows ("Reassessed after T-001 was completed"); this is the one data-model addition (new migration).
 - A **"Reassess now"** button inside the "Awaiting reassessment" notice; list the completed actions and their evidence in the reassessment form.
 - Show the change in the result ("Residual 8, was 20").

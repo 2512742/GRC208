@@ -24,6 +24,7 @@ const UsersPage = lazy(() => import("./pages/UsersPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const KitchenSinkPage = lazy(() => import("./pages/KitchenSinkPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const MethodologyPage = lazy(() => import("./pages/MethodologyPage"));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { me, loading, unreachable, retry } = useAuth();
@@ -74,6 +75,7 @@ export function App() {
           <Route path="approvals" element={<ApprovalsPage />} />
           <Route path="assets" element={<AssetsPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="methodology" element={<MethodologyPage />} />
           <Route
             path="reports"
             element={

@@ -47,6 +47,10 @@ export type UserDetail = S["UserDetail"];
 export type UserCreate = S["UserCreate"];
 export type UserUpdate = S["UserUpdate"];
 export type TimezoneOption = S["TimezoneOption"];
+export type FollowedAction = S["FollowedAction"];
+export type Methodology = S["Methodology"];
+export type ScaleLevel = S["ScaleLevel"];
+export type BandRule = S["BandRule"];
 
 /** The nested `risk` object on actions and acceptances. */
 export interface RiskRef {

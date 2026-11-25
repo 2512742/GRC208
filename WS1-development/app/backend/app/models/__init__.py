@@ -20,18 +20,27 @@ from app.models.register import (
 from app.models.treatment import (
     AcceptanceRequest,
     ActionControl,
+    AssessmentAction,
     TreatmentAction,
     TreatmentDecision,
 )
 
-# Tables a database trigger protects from UPDATE and DELETE (see the baseline migration).
-INSERT_ONLY_TABLES = ("risk_assessment", "treatment_decision", "evidence", "audit_log")
+# Tables a database trigger protects from UPDATE and DELETE (baseline migration, plus
+# assessment_action from the residual-reassessment migration).
+INSERT_ONLY_TABLES = (
+    "risk_assessment",
+    "treatment_decision",
+    "evidence",
+    "audit_log",
+    "assessment_action",
+)
 
 __all__ = [
     "INSERT_ONLY_TABLES",
     "AcceptanceRequest",
     "ActionControl",
     "AppSetting",
+    "AssessmentAction",
     "Asset",
     "AssetObligation",
     "AuditLog",

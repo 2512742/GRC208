@@ -160,6 +160,16 @@ class AssessmentCreate(BaseModel):
     )
 
 
+class FollowedAction(BaseModel):
+    """A completed treatment action, as referenced from the residual-risk history."""
+
+    id: int
+    action_code: str
+    title: str
+    completed_at: datetime | None
+    evidence_count: int = 0
+
+
 class AssessmentOut(BaseModel):
     id: int
     assessment_type: str
@@ -173,6 +183,12 @@ class AssessmentOut(BaseModel):
     explanation: str
     assessed_by: PersonRef
     assessed_at: datetime
+    sequence: int = Field(default=0, description="0 = inherent; 1, 2, ... = residual reassessments")
+    label: str = Field(default="", description="'Inherent assessment' or 'Residual reassessment n'")
+    previous_score: int | None = Field(default=None, description="Score before this reassessment")
+    follows_actions: list[FollowedAction] = Field(
+        default_factory=list, description="Completed actions this reassessment followed"
+    )
 
 
 class ScoreSummary(BaseModel):
@@ -231,6 +247,12 @@ class RiskSummary(BaseModel):
     services: list[str]
     current: ScoreSummary | None
     original_score: int | None
+    inherent: ScoreSummary | None = Field(
+        default=None, description="The first (inherent) assessment, before any treatment"
+    )
+    residual: ScoreSummary | None = Field(
+        default=None, description="The latest residual reassessment; null until one exists"
+    )
     next_review_date: date | None
     review_due_soon: bool
     display_status: str = Field(description="status, or 'acceptance_expired' when it lapsed")
@@ -247,6 +269,9 @@ class RiskDetail(RiskSummary):
     business_impact: str
     obligations: list[ObligationOut]
     assessments: list[AssessmentOut]
+    awaiting_reassessment_actions: list[FollowedAction] = Field(
+        default_factory=list, description="Completed actions no reassessment has followed yet"
+    )
     created_by: PersonRef
     created_at: datetime
     updated_at: datetime

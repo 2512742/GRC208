@@ -6,7 +6,7 @@ import { api, download } from "../api/client";
 import { useServices } from "../api/queries";
 import type { Overview, Totals } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { ScoreBadge, StatusChip } from "../components/risk";
+import { ScoreBadge, StatusChip, InherentResidual } from "../components/risk";
 import { useToast } from "../components/Toast";
 import { DataTable, ErrorState, Loading, PageHeader } from "../components/ui";
 import { BANDS, compactNaira, titleCase } from "../lib/format";
@@ -131,6 +131,7 @@ export default function ReportsPage() {
                 { key: "id", header: "ID", render: (r) => <span className="mono-data">{r.risk_code}</span>, hideOnMobile: true },
                 { key: "title", header: "Risk", render: (r) => r.title, className: "w-[30%]" },
                 { key: "score", header: "Score", render: (r) => <ScoreBadge score={r.current} />, hideOnMobile: true },
+                { key: "inherent", header: "Inherent → Residual", render: (r) => <InherentResidual risk={r} /> },
                 { key: "owner", header: "Owner", render: (r) => r.owner.full_name },
                 { key: "status", header: "Status", render: (r) => <StatusChip status={r.display_status} /> },
                 { key: "strategy", header: "Strategy", render: (r) => titleCase(r.strategy) },

@@ -119,6 +119,55 @@ def test_invalid_settings_rejected(seeded_api: TestClient, body: dict) -> None:
     assert seeded_api.patch("/api/settings", json=body).status_code == 422
 
 
+def test_methodology_for_any_signed_in_user(seeded_api: TestClient) -> None:
+    assert seeded_api.get("/api/methodology").status_code == 401
+    sign_in(seeded_api, "ernestina")
+    m = seeded_api.get("/api/methodology").json()
+    assert m["formula"] and m["appetite_threshold"] == 10
+    assert [lv["level"] for lv in m["likelihood"]] == [1, 2, 3, 4, 5]
+    assert m["impact"][4]["label"] == "Severe" and all(lv["definition"] for lv in m["impact"])
+    bands = {b["band"]: b for b in m["bands"]}
+    assert (bands["critical"]["min_score"], bands["critical"]["max_score"]) == (15, 25)
+    assert (bands["low"]["min_score"], bands["low"]["max_score"]) == (1, 4)
+    assert bands["high"]["above_appetite"] and not bands["medium"]["above_appetite"]
+    assert bands["critical"]["remediation_days"] == 30
+
+
+def test_level_definitions_edited_by_admin_and_audited(
+    seeded_api: TestClient, seeded: Session
+) -> None:
+    sign_in(seeded_api, "admin")
+    defaults = seeded_api.get("/api/settings").json()["impact_definitions"]
+    assert len(defaults) == 5 and "$" not in "".join(defaults)
+    naira = [f"  Loss up to ₦{n} million  " for n in (1, 10, 50, 250, 1000)]
+    changed = seeded_api.patch("/api/settings", json={"impact_definitions": naira})
+    assert changed.status_code == 200
+    assert changed.json()["impact_definitions"][0] == "Loss up to ₦1 million"
+    m = seeded_api.get("/api/methodology").json()
+    assert m["impact"][4]["definition"] == "Loss up to ₦1000 million"
+    entry = seeded.exec(select(AuditLog).order_by(col(AuditLog.id).desc())).first()
+    assert entry is not None and "impact_definitions" in (entry.after or "")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"likelihood_definitions": ["a b c"] * 4},
+        {"impact_definitions": ["a b c"] * 6},
+        {"impact_definitions": ["ok text"] * 4 + ["x"]},
+    ],
+)
+def test_invalid_level_definitions_rejected(seeded_api: TestClient, body: dict) -> None:
+    sign_in(seeded_api, "admin")
+    assert seeded_api.patch("/api/settings", json=body).status_code == 422
+
+
+def test_owner_cannot_edit_level_definitions(seeded_api: TestClient) -> None:
+    sign_in(seeded_api, "emmanuel")
+    body = {"impact_definitions": ["Some text here"] * 5}
+    assert seeded_api.patch("/api/settings", json=body).status_code == 403
+
+
 # ── CLI tools ──────────────────────────────────────────────────────────────────────────────
 
 

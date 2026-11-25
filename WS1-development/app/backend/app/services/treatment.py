@@ -17,6 +17,7 @@ from sqlmodel import Session, col, func, select
 from app.models import (
     AcceptanceRequest,
     ActionControl,
+    AssessmentAction,
     Control,
     Evidence,
     Risk,
@@ -432,6 +433,22 @@ def evidence_for(session: Session, target_type: str, target_id: int) -> list[Evi
 # ── Reassessment ───────────────────────────────────────────────────────────────────────────
 
 
+def actions_awaiting_reassessment(session: Session, risk_id: int) -> list[TreatmentAction]:
+    """Completed actions of the risk that no reassessment has followed yet, oldest first."""
+    linked = select(AssessmentAction.action_id)
+    return list(
+        session.exec(
+            select(TreatmentAction)
+            .where(
+                TreatmentAction.risk_id == risk_id,
+                TreatmentAction.status == ActionStatus.COMPLETED.value,
+                col(TreatmentAction.id).not_in(linked),
+            )
+            .order_by(col(TreatmentAction.completed_at), col(TreatmentAction.id))
+        )
+    )
+
+
 def reassess(
     session: Session,
     by: audit.AuditActor,
@@ -471,6 +488,11 @@ def reassess(
         )
     except reg.RegisterError as exc:
         raise TreatmentError(str(exc), exc.status) from exc
+    # Record which completed actions this residual reassessment followed (insert-only links).
+    followed = actions_awaiting_reassessment(session, risk.id)  # type: ignore[arg-type]
+    for action in followed:
+        session.add(AssessmentAction(assessment_id=row.id, action_id=action.id))  # type: ignore[arg-type]
+    session.flush()
     stored = store_evidence(
         session,
         by,

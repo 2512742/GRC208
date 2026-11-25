@@ -666,3 +666,70 @@ def test_brief_required_demonstration(api: TestClient, people: dict, db: Session
     for expected in ("ASSESS", "UPLOAD", "COMPLETE", "REQUEST", "DENIED", "APPROVE"):
         assert expected in actions
     assert verify_chain(db).ok
+
+
+# ── Inherent and residual risk (feedback of 25 Nov) ─────────────────────────────────────────
+
+
+def test_inherent_and_residual_with_linked_actions(
+    api: TestClient, world: dict, people: dict, db: Session
+) -> None:
+    """The history names the inherent assessment and each residual reassessment, shows the score
+    before it and the completed actions it followed; summaries carry inherent and residual."""
+    first = new_action(api, world["r1"], people["emmanuel"].id, title="Add row locking")
+    second = new_action(api, world["r1"], people["emmanuel"].id, title="Add idempotency keys")
+    before = api.get(f"/api/risks/{world['r1']['id']}").json()
+    assert before["inherent"]["score"] == 20 and before["residual"] is None
+    assert before["awaiting_reassessment_actions"] == []
+
+    for action in (first, second):
+        api.post(
+            f"/api/actions/{action['id']}/complete",
+            data={"note": "Deployed and load-tested."},
+            files=pdf(),
+        )
+    waiting = api.get(f"/api/risks/{world['r1']['id']}").json()
+    awaiting = waiting["awaiting_reassessment_actions"]
+    assert [a["action_code"] for a in awaiting] == [first["action_code"], second["action_code"]]
+    assert all(a["evidence_count"] == 1 and a["completed_at"] for a in awaiting)
+
+    assert reassess(api, world["r1"], 2, 4).status_code == 201
+    after = api.get(f"/api/risks/{world['r1']['id']}").json()
+    history = after["assessments"]
+    assert [(h["label"], h["sequence"], h["previous_score"]) for h in history] == [
+        ("Inherent assessment", 0, None),
+        ("Residual reassessment 1", 1, 20),
+    ]
+    assert [a["action_code"] for a in history[1]["follows_actions"]] == [
+        first["action_code"],
+        second["action_code"],
+    ]
+    assert after["awaiting_reassessment_actions"] == []
+    assert (after["inherent"]["score"], after["residual"]["score"]) == (20, 8)
+    listed = api.get("/api/risks", params={"q": world["r1"]["risk_code"]}).json()["items"][0]
+    assert (listed["inherent"]["band"], listed["residual"]["band"]) == ("critical", "medium")
+
+    # A second reassessment with no newly completed action links nothing.
+    assert reassess(api, world["r1"], 1, 4).status_code == 201
+    latest = api.get(f"/api/risks/{world['r1']['id']}").json()["assessments"][-1]
+    assert (latest["label"], latest["previous_score"], latest["follows_actions"]) == (
+        "Residual reassessment 2",
+        8,
+        [],
+    )
+
+
+def test_reassessment_links_are_insert_only(
+    api: TestClient, world: dict, people: dict, db: Session
+) -> None:
+    from sqlalchemy import text
+
+    from tests.factories import expect_db_error
+
+    action = new_action(api, world["r1"], people["emmanuel"].id)
+    api.post(
+        f"/api/actions/{action['id']}/complete", data={"note": "Done and verified."}, files=pdf()
+    )
+    reassess(api, world["r1"], 2, 4)
+    with expect_db_error(db, "insert-only"):
+        db.exec(text("DELETE FROM assessment_action"))  # type: ignore[call-overload]

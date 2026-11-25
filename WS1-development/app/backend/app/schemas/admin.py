@@ -77,6 +77,8 @@ class SettingsOut(BaseModel):
     review_days_medium: int
     review_days_low: int
     org_timezone: str
+    likelihood_definitions: list[str]
+    impact_definitions: list[str]
     updated_at: datetime
     updated_by: str | None
 
@@ -92,6 +94,22 @@ class SettingsUpdate(BaseModel):
     review_days_medium: int | None = Field(default=None, ge=1, le=730)
     review_days_low: int | None = Field(default=None, ge=1, le=730)
     org_timezone: str | None = None
+    likelihood_definitions: list[str] | None = Field(
+        default=None, description="Exactly five texts, level 1 first"
+    )
+    impact_definitions: list[str] | None = Field(
+        default=None, description="Exactly five texts, level 1 first; include the ₦ ranges"
+    )
+
+    @field_validator("likelihood_definitions", "impact_definitions")
+    @classmethod
+    def _five_texts(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return value
+        texts = [t.strip() for t in value]
+        if len(texts) != 5 or any(not 3 <= len(t) <= 300 for t in texts):
+            raise ValueError("give exactly five definitions, each 3 to 300 characters")
+        return texts
 
     @field_validator("org_timezone")
     @classmethod
@@ -99,3 +117,32 @@ class SettingsUpdate(BaseModel):
         if value is not None and (value == SYSTEM or value not in DISPLAY_TIMEZONES):
             raise ValueError("must be one of the listed time zones (not 'system')")
         return value
+
+
+class ScaleLevel(BaseModel):
+    level: int
+    label: str
+    definition: str
+
+
+class BandRule(BaseModel):
+    band: str
+    label: str
+    min_score: int
+    max_score: int
+    above_appetite: bool
+    remediation_days: int | None
+    review_days: int
+
+
+class Methodology(BaseModel):
+    """Everything the "How scoring works" page and the scoring rubric show."""
+
+    formula: str
+    appetite_threshold: int
+    appetite_statement: str
+    likelihood: list[ScaleLevel]
+    impact: list[ScaleLevel]
+    bands: list[BandRule]
+    review_warning_days: int
+    org_timezone: str

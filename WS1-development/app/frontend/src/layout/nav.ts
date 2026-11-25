@@ -1,5 +1,6 @@
 import {
   ArrowUpTrayIcon,
+  BookOpenIcon,
   ChartBarSquareIcon,
   CheckBadgeIcon,
   ClipboardDocumentCheckIcon,
@@ -29,6 +30,7 @@ export const NAV: NavItem[] = [
   { to: "/actions", label: "Treatment actions", icon: ClipboardDocumentCheckIcon },
   { to: "/approvals", label: "Acceptances", icon: CheckBadgeIcon },
   { to: "/assets", label: "Assets", icon: ServerStackIcon },
+  { to: "/methodology", label: "How scoring works", icon: BookOpenIcon },
   { to: "/reports", label: "Reports", icon: DocumentChartBarIcon, permission: "export_reports" },
   { to: "/imports", label: "CSV import", icon: ArrowUpTrayIcon, permission: "import_csv" },
   { to: "/audit", label: "Audit log", icon: FingerPrintIcon, permission: "view_audit" },

@@ -135,6 +135,15 @@ class AppSetting(SQLModel, table=True):
     review_days_medium: int = 180
     review_days_low: int = 365
     org_timezone: str = Field(default="Africa/Lagos", max_length=64)
+    # What each likelihood and impact level means (five texts each, level 1 first). Kept as
+    # settings so the risk framework team can refine the wording, including the ₦ loss ranges,
+    # without a code change; NULL means the defaults in services/scoring.py.
+    likelihood_definitions: list[str] | None = Field(
+        default=None, sa_column=Column(JSON, nullable=True)
+    )
+    impact_definitions: list[str] | None = Field(
+        default=None, sa_column=Column(JSON, nullable=True)
+    )
     updated_at: datetime = Field(default_factory=now_utc, sa_type=UTCDateTime, nullable=False)
     updated_by_id: int | None = Field(
         default=None, foreign_key="user_account.id", ondelete="RESTRICT"

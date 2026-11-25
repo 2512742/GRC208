@@ -95,6 +95,21 @@ class ActionControl(SQLModel, table=True):
     control_id: int = Field(foreign_key="control.id", ondelete="RESTRICT", primary_key=True)
 
 
+class AssessmentAction(SQLModel, table=True):
+    """Which completed treatment actions a residual reassessment followed (brief feature 4).
+
+    Filled once, when the reassessment is recorded, and never changed: it lets the history say
+    "reassessed after T-001 was completed".
+    """
+
+    __tablename__ = "assessment_action"
+
+    assessment_id: int = Field(
+        foreign_key="risk_assessment.id", ondelete="RESTRICT", primary_key=True
+    )
+    action_id: int = Field(foreign_key="treatment_action.id", ondelete="RESTRICT", primary_key=True)
+
+
 class AcceptanceRequest(SQLModel, table=True):
     """Request to accept a risk, decided by an approver.
 

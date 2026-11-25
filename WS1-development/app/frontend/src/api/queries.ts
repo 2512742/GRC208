@@ -5,6 +5,7 @@ import { api } from "./client";
 import type {
   AssetOut,
   ControlOut,
+  Methodology,
   ObligationOut,
   ServiceOut,
   SettingsOut,
@@ -38,3 +39,6 @@ export const useUsers = () =>
 
 export const useSettings = () =>
   useQuery({ queryKey: ["settings"], queryFn: () => api.get<SettingsOut>("/settings"), staleTime: LONG });
+
+export const useMethodology = () =>
+  useQuery({ queryKey: ["methodology"], queryFn: () => api.get<Methodology>("/methodology"), staleTime: LONG });

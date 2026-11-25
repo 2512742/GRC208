@@ -29,6 +29,29 @@ IMPACT_LABELS: dict[int, str] = {
     4: "Major",
     5: "Severe",
 }
+# What each level means. Drafts taken from the group's prototype, with its US-dollar loss
+# figures left out: the risk framework team adds the ₦ ranges through the settings, which
+# override these defaults (AppSetting.likelihood_definitions / impact_definitions).
+DEFAULT_LIKELIHOOD_DEFINITIONS: tuple[str, ...] = (
+    "May occur only in exceptional circumstances (under 5% chance in 12 months).",
+    "Could occur at some time (5% to 20%); needs a targeted attacker and several control failures.",
+    "Might occur (21% to 50%); known exploit patterns exist and exposure is moderate.",
+    "Will probably occur (51% to 80%); active scanning or attack campaigns have been seen.",
+    "Expected to occur (over 80%); an exposed weakness or a recurring incident.",
+)
+DEFAULT_IMPACT_DEFINITIONS: tuple[str, ...] = (
+    "Minimal disruption (under 1 hour); negligible financial loss; no regulatory or customer "
+    "impact.",
+    "Local service degradation (1 to 4 hours); minor financial loss; fixed internally.",
+    "Significant disruption to a business unit (4 to 24 hours); moderate financial loss; "
+    "reportable incident.",
+    "Critical outage (24 to 72 hours); major financial loss; regulatory inquiry and customer "
+    "churn.",
+    "Systemic failure (over 72 hours); severe financial loss; major data breach, sanctions or "
+    "licence risk.",
+)
+LEVEL_COUNT = 5
+
 BAND_LABELS: dict[Band, str] = {
     Band.LOW: "Low",
     Band.MEDIUM: "Medium",

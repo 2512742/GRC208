@@ -645,6 +645,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/methodology": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Methodology
+         * @description The documented scoring method (brief feature 2): scales with their definitions, rating
+         *     bands with remediation deadlines and review cycles, and the appetite threshold.
+         */
+        get: operations["methodology_api_methodology_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/obligations": {
         parameters: {
             query?: never;
@@ -1226,16 +1247,38 @@ export interface components {
             band: components["schemas"]["Band"];
             /** Explanation */
             explanation: string;
+            /**
+             * Follows Actions
+             * @description Completed actions this reassessment followed
+             */
+            follows_actions?: components["schemas"]["FollowedAction"][];
             /** Id */
             id: number;
             /** Impact */
             impact: number;
+            /**
+             * Label
+             * @description 'Inherent assessment' or 'Residual reassessment n'
+             * @default
+             */
+            label: string;
             /** Likelihood */
             likelihood: number;
+            /**
+             * Previous Score
+             * @description Score before this reassessment
+             */
+            previous_score?: number | null;
             /** Rationale */
             rationale: string;
             /** Score */
             score: number;
+            /**
+             * Sequence
+             * @description 0 = inherent; 1, 2, ... = residual reassessments
+             * @default 0
+             */
+            sequence: number;
         };
         /** AssetCreate */
         AssetCreate: {
@@ -1372,6 +1415,23 @@ export interface components {
          * @enum {string}
          */
         Band: "low" | "medium" | "high" | "critical";
+        /** BandRule */
+        BandRule: {
+            /** Above Appetite */
+            above_appetite: boolean;
+            /** Band */
+            band: string;
+            /** Label */
+            label: string;
+            /** Max Score */
+            max_score: number;
+            /** Min Score */
+            min_score: number;
+            /** Remediation Days */
+            remediation_days: number | null;
+            /** Review Days */
+            review_days: number;
+        };
         /** Body_complete_action_api_actions__action_id__complete_post */
         Body_complete_action_api_actions__action_id__complete_post: {
             /**
@@ -1547,6 +1607,25 @@ export interface components {
          */
         EvidenceTarget: "risk" | "assessment" | "decision" | "action" | "acceptance" | "import_batch";
         /**
+         * FollowedAction
+         * @description A completed treatment action, as referenced from the residual-risk history.
+         */
+        FollowedAction: {
+            /** Action Code */
+            action_code: string;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Evidence Count
+             * @default 0
+             */
+            evidence_count: number;
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+        };
+        /**
          * Framework
          * @enum {string}
          */
@@ -1672,6 +1751,28 @@ export interface components {
             role: components["schemas"]["Role"];
             /** Username */
             username: string;
+        };
+        /**
+         * Methodology
+         * @description Everything the "How scoring works" page and the scoring rubric show.
+         */
+        Methodology: {
+            /** Appetite Statement */
+            appetite_statement: string;
+            /** Appetite Threshold */
+            appetite_threshold: number;
+            /** Bands */
+            bands: components["schemas"]["BandRule"][];
+            /** Formula */
+            formula: string;
+            /** Impact */
+            impact: components["schemas"]["ScaleLevel"][];
+            /** Likelihood */
+            likelihood: components["schemas"]["ScaleLevel"][];
+            /** Org Timezone */
+            org_timezone: string;
+            /** Review Warning Days */
+            review_warning_days: number;
         };
         /** ObligationCreate */
         ObligationCreate: {
@@ -1888,6 +1989,11 @@ export interface components {
             assessments: components["schemas"]["AssessmentOut"][];
             /** Assets */
             assets: components["schemas"]["AssetRef"][];
+            /**
+             * Awaiting Reassessment Actions
+             * @description Completed actions no reassessment has followed yet
+             */
+            awaiting_reassessment_actions?: components["schemas"]["FollowedAction"][];
             /** Business Impact */
             business_impact: string;
             /** Category */
@@ -1908,6 +2014,8 @@ export interface components {
             display_status: string;
             /** Id */
             id: number;
+            /** @description The first (inherent) assessment, before any treatment */
+            inherent?: components["schemas"]["ScoreSummary"] | null;
             /** Next Review Date */
             next_review_date: string | null;
             /** Obligations */
@@ -1925,6 +2033,8 @@ export interface components {
              */
             overdue_actions: number;
             owner: components["schemas"]["PersonRef"];
+            /** @description The latest residual reassessment; null until one exists */
+            residual?: components["schemas"]["ScoreSummary"] | null;
             /** Review Due Soon */
             review_due_soon: boolean;
             /** Risk Code */
@@ -1971,6 +2081,8 @@ export interface components {
             display_status: string;
             /** Id */
             id: number;
+            /** @description The first (inherent) assessment, before any treatment */
+            inherent?: components["schemas"]["ScoreSummary"] | null;
             /** Next Review Date */
             next_review_date: string | null;
             /**
@@ -1986,6 +2098,8 @@ export interface components {
              */
             overdue_actions: number;
             owner: components["schemas"]["PersonRef"];
+            /** @description The latest residual reassessment; null until one exists */
+            residual?: components["schemas"]["ScoreSummary"] | null;
             /** Review Due Soon */
             review_due_soon: boolean;
             /** Risk Code */
@@ -2032,6 +2146,15 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "analyst" | "owner" | "approver" | "auditor";
+        /** ScaleLevel */
+        ScaleLevel: {
+            /** Definition */
+            definition: string;
+            /** Label */
+            label: string;
+            /** Level */
+            level: number;
+        };
         /** ScoreSummary */
         ScoreSummary: {
             /** Above Appetite */
@@ -2153,6 +2276,10 @@ export interface components {
         SettingsOut: {
             /** Appetite Threshold */
             appetite_threshold: number;
+            /** Impact Definitions */
+            impact_definitions: string[];
+            /** Likelihood Definitions */
+            likelihood_definitions: string[];
             /** Org Timezone */
             org_timezone: string;
             /** Review Days Critical */
@@ -2183,6 +2310,16 @@ export interface components {
         SettingsUpdate: {
             /** Appetite Threshold */
             appetite_threshold?: number | null;
+            /**
+             * Impact Definitions
+             * @description Exactly five texts, level 1 first; include the ₦ ranges
+             */
+            impact_definitions?: string[] | null;
+            /**
+             * Likelihood Definitions
+             * @description Exactly five texts, level 1 first
+             */
+            likelihood_definitions?: string[] | null;
             /** Org Timezone */
             org_timezone?: string | null;
             /** Review Days Critical */
@@ -3533,6 +3670,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    methodology_api_methodology_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Methodology"];
                 };
             };
         };
