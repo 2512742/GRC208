@@ -1,4 +1,4 @@
-/** Guardian "Deep Intel" design system mapped onto CSS variables (PLAN.md §2.6). */
+/** Design tokens mapped onto CSS variables; colours follow the Sentinel dashboard palette. */
 const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
 /** @type {import('tailwindcss').Config} */
@@ -25,6 +25,9 @@ export default {
         primary: v("primary"),
         "primary-container": v("primary-container"),
         "on-accent": v("on-accent"),
+        "accent-tint": v("accent-tint"),
+        bar: v("bar"),
+        "on-bar": v("on-bar"),
         btn: v("btn"),
         "btn-hover": v("btn-hover"),
         "on-btn": v("on-btn"),

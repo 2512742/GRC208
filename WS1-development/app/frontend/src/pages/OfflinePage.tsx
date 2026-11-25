@@ -4,7 +4,7 @@ import { ShieldCheckIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
 export function OfflinePage({ retry }: { retry: () => void }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center gap-2 border-b border-outline bg-primary-container px-4 pt-[env(safe-area-inset-top)] text-white">
+      <header className="flex h-14 items-center gap-2 border-b border-line bg-bar px-4 pt-[env(safe-area-inset-top)] text-on-bar">
         <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
           <ShieldCheckIcon className="h-6 w-6" aria-hidden /> RiskTrack
         </span>

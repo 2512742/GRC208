@@ -1,6 +1,6 @@
 /**
  * App shell, following Guardian's layout:
- * - solid teal top bar (brand, then theme toggle and user controls);
+ * - neutral top bar (brand, then theme toggle and user controls), Sentinel-style;
  * - desktop (lg+): side navigation;
  * - phones and tablets: app-style bottom tab bar with a "More" sheet, no website footer
  *   (Guardian `app-tabbar` / `_bottom_nav_style.html`).
@@ -23,10 +23,10 @@ import { MORE_ICON, TAB_ITEMS, navFor } from "./nav";
 
 function Brand() {
   return (
-    <span className="flex items-center gap-2 text-lg font-bold tracking-tight text-white">
+    <span className="flex items-center gap-2 text-lg font-bold tracking-tight text-on-bar">
       <ShieldCheckIcon className="h-6 w-6" aria-hidden />
       <span>RiskTrack</span>
-      <span className="hidden border-l border-white/30 pl-2 text-xs font-medium text-white/70 sm:inline">
+      <span className="hidden border-l border-line pl-2 text-xs font-medium text-muted sm:inline">
         The Alajo
       </span>
     </span>
@@ -50,7 +50,7 @@ function SideNav() {
           className={({ isActive }) =>
             cx(
               "flex items-center gap-3 border-l-2 px-3 py-2 text-sm font-medium no-underline hover:bg-hover hover:no-underline",
-              isActive ? "border-accent bg-accent/10 text-accent" : "border-transparent text-ink",
+              isActive ? "border-accent bg-accent-tint text-accent" : "border-transparent text-ink",
             )
           }
         >
@@ -78,20 +78,20 @@ function DesktopUser() {
     <div className="flex items-center gap-2">
       <NavLink
         to="/account"
-        className="flex items-center gap-2 text-white no-underline hover:no-underline"
+        className="flex items-center gap-2 text-on-bar no-underline hover:no-underline"
         title="My account"
       >
         <span className="hidden text-right leading-tight xl:block">
           <span className="block text-sm font-semibold">{me.full_name}</span>
-          <span className="block text-[11px] text-white/70">{roleLine(me.job_title, me.role)}</span>
+          <span className="block text-[11px] text-muted">{roleLine(me.job_title, me.role)}</span>
         </span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold text-primary-container dark:bg-white/15 dark:text-white">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-on-accent">
           {initials(me.full_name)}
         </span>
       </NavLink>
       <button
         type="button"
-        className="p-2 text-white/80 hover:text-white"
+        className="p-2 text-on-bar/80 hover:text-on-bar"
         aria-label="Sign out"
         title="Sign out"
         onClick={signOut}
@@ -163,7 +163,7 @@ function MoreSheet({ onClose }: { onClose: () => void }) {
       <div className="sheet-in absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <NavLink to="/account" onClick={onClose} className="flex min-w-0 items-center gap-3 text-ink no-underline hover:no-underline">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-sm font-bold text-white">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent">
               {initials(me.full_name)}
             </span>
             <span className="min-w-0">
@@ -225,7 +225,7 @@ export function AppShell() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface focus:p-2">
         Skip to content
       </a>
-      <header className="no-print sticky top-0 z-30 border-b border-outline bg-primary-container pt-[env(safe-area-inset-top)] text-white">
+      <header className="no-print sticky top-0 z-30 border-b border-line bg-bar pt-[env(safe-area-inset-top)] text-on-bar">
         <div className="flex h-14 items-center gap-2 px-4">
           <NavLink to="/" className="no-underline hover:no-underline" aria-label="RiskTrack home">
             <Brand />
@@ -243,7 +243,7 @@ export function AppShell() {
       </header>
 
       <div className="flex flex-1">
-        <aside className="no-print sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-line bg-surface lg:block">
+        <aside className="no-print sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-line bg-container lg:block">
           <SideNav />
         </aside>
         <main id="main" className="app-main min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-8">
@@ -251,7 +251,7 @@ export function AppShell() {
         </main>
       </div>
 
-      <footer className="no-print hidden bg-footer px-4 py-3 text-xs text-white/70 lg:block">
+      <footer className="no-print hidden border-t border-line bg-footer px-4 py-3 text-xs text-muted lg:block">
         RiskTrack · GRC208 Group 1 capstone · The Alajo is a fictional organisation. Deadlines are
         evaluated in WAT (Africa/Lagos).
       </footer>

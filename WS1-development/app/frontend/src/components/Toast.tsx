@@ -17,7 +17,7 @@ interface ToastApi {
 const ToastContext = createContext<ToastApi | null>(null);
 let nextId = 1;
 
-/** Bottom-right toasts (success teal, error red) instead of alert(). */
+/** Bottom-right toasts (success blue, error red) instead of alert(). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
 

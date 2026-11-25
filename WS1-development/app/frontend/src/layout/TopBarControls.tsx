@@ -22,7 +22,7 @@ export function ThemeToggle({ onDark }: { onDark?: boolean }) {
   return (
     <button
       type="button"
-      className={onDark ? "p-2 text-white/80 hover:text-white" : "btn-ghost btn-sm px-2"}
+      className={onDark ? "p-2 text-on-bar/80 hover:text-on-bar" : "btn-ghost btn-sm px-2"}
       onClick={toggle}
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
@@ -46,7 +46,7 @@ export function TimezoneSelect({ compact, onDark }: { compact?: boolean; onDark?
   );
   return (
     <label className="flex min-w-0 items-center gap-2">
-      <span className={compact ? "sr-only" : cx("label-caps hidden whitespace-nowrap xl:inline", onDark && "text-white/70")}>
+      <span className={compact ? "sr-only" : cx("label-caps hidden whitespace-nowrap xl:inline", onDark && "text-on-bar/70")}>
         Times in
       </span>
       <select

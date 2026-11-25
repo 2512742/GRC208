@@ -10,11 +10,11 @@ export function ForcedPasswordPage() {
   const { signOut } = useAuth();
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center gap-2 border-b border-outline bg-primary-container px-4 pt-[env(safe-area-inset-top)] text-white">
+      <header className="flex h-14 items-center gap-2 border-b border-line bg-bar px-4 pt-[env(safe-area-inset-top)] text-on-bar">
         <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
           <ShieldCheckIcon className="h-6 w-6" aria-hidden /> RiskTrack
         </span>
-        <button type="button" className="ml-auto p-2 text-sm text-white/80 hover:text-white" onClick={() => signOut()}>
+        <button type="button" className="ml-auto p-2 text-sm text-on-bar/80 hover:text-on-bar" onClick={() => signOut()}>
           Sign out
         </button>
       </header>

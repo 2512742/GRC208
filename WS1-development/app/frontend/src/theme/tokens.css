@@ -1,66 +1,72 @@
-/* Guardian "Deep Intel" tokens (PLAN.md §2.6). Colours are RGB triplets so Tailwind can apply
-   opacity (e.g. bg-band-high/15 for heat-map tints). html.dark switches the palette. */
+/* Colours follow the Sentinel dashboard's light and dark palettes (neutral greys with a blue
+   accent; red reserved for critical). Values are RGB triplets so Tailwind can apply opacity
+   (e.g. bg-band-high/15 for heat-map tints). html.dark switches the palette. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: 249 249 249;
-  --surface: 255 255 255;
-  --surface-container: 238 238 238;
-  --hover: 245 245 245;
-  --text: 26 28 28;
-  --text-muted: 63 73 71;
-  --outline: 111 121 119;
-  --outline-variant: 191 201 198;
-  --primary: 0 55 50;
-  --primary-container: 0 80 73;
-  --accent: 0 80 73;
+  --bg: 255 255 255; /* Sentinel --bg #ffffff */
+  --surface: 255 255 255; /* --panel */
+  --surface-container: 245 245 245; /* --panel-2 #f5f5f5 */
+  --hover: 232 232 232; /* --hover-bg #e8e8e8 */
+  --text: 26 26 26; /* --text-primary #1a1a1a */
+  --text-muted: 85 85 85; /* --text-secondary #555555 */
+  --outline: 136 136 136; /* --text-muted #888888 */
+  --outline-variant: 208 208 208; /* --border #d0d0d0 */
+  --primary: 26 26 26; /* headings stay neutral, as in Sentinel */
+  --primary-container: 0 120 212;
+  --accent: 0 120 212; /* --accent #0078D4 */
   --on-accent: 255 255 255;
-  /* Solid fills (buttons, toasts, strong chips). In dark mode these are deep and muted so
-     nothing glows: light text on a dark fill instead of dark text on a bright one. */
-  --btn: 0 80 73;
-  --btn-hover: 0 55 50;
+  --accent-tint: 232 243 252; /* --accent-tint #e8f3fc */
+  --bar: 245 245 245; /* top bar: --panel-2 */
+  --on-bar: 26 26 26;
+  /* Solid fills (buttons, toasts, strong chips). */
+  --btn: 0 120 212;
+  --btn-hover: 0 103 184;
   --on-btn: 255 255 255;
-  --danger-fill: 186 26 26;
+  --danger-fill: 196 43 28; /* --crit #C42B1C */
   --on-danger-fill: 255 255 255;
-  --strong-fill: 26 28 28;
-  --on-strong-fill: 249 249 249;
-  --error: 186 26 26;
-  --footer: 26 28 28;
+  --strong-fill: 253 236 235; /* --crit-tint #fdeceb with --crit text */
+  --on-strong-fill: 196 43 28;
+  --error: 196 43 28;
+  --footer: 245 245 245;
   --band-low: 46 125 50;
-  --band-medium: 154 107 0;
+  --band-medium: 157 93 0; /* --warn #9D5D00 */
   --band-high: 199 91 0;
-  --band-critical: 186 26 26;
+  --band-critical: 196 43 28; /* --crit */
   color-scheme: light;
 }
 
 html.dark {
-  --bg: 13 22 21;
-  --surface: 26 36 35;
-  --surface-container: 26 36 35;
-  --hover: 30 44 43;
-  --text: 220 228 226;
-  --text-muted: 139 181 177;
-  --outline: 43 62 60;
-  --outline-variant: 43 62 60;
-  --primary: 126 207 197;
-  --primary-container: 0 39 36;
-  --accent: 77 184 170;
-  --on-accent: 13 22 21;
-  --btn: 31 111 102; /* #1f6f66, light text 5.3:1 */
-  --btn-hover: 38 128 118;
-  --on-btn: 230 244 242;
-  --danger-fill: 140 29 24; /* #8c1d18, light text 7:1 */
-  --on-danger-fill: 255 218 214;
-  --strong-fill: 72 28 26; /* dim red tint for "Above appetite", "Overdue", "Expired" */
-  --on-strong-fill: 255 196 189;
-  --error: 255 180 171;
-  --footer: 5 12 11;
+  --bg: 27 27 27; /* #1b1b1b */
+  --surface: 36 36 36; /* --panel #242424 */
+  --surface-container: 44 44 44; /* --panel-2 #2c2c2c */
+  --hover: 51 51 51; /* #333333 */
+  --text: 232 232 232; /* #e8e8e8 */
+  --text-muted: 168 168 168; /* #a8a8a8 */
+  --outline: 120 120 120; /* #787878 */
+  --outline-variant: 61 61 61; /* --border #3d3d3d */
+  --primary: 232 232 232;
+  --primary-container: 63 156 255;
+  --accent: 63 156 255; /* --accent #3f9cff */
+  --on-accent: 27 27 27;
+  --accent-tint: 13 43 69; /* #0d2b45 */
+  --bar: 44 44 44;
+  --on-bar: 232 232 232;
+  --btn: 0 95 184; /* deeper blue so white text stays readable (6:1) */
+  --btn-hover: 0 108 207;
+  --on-btn: 255 255 255;
+  --danger-fill: 164 38 44;
+  --on-danger-fill: 255 255 255;
+  --strong-fill: 58 32 32; /* --crit-tint #3a2020 */
+  --on-strong-fill: 229 103 93; /* --crit #e5675d */
+  --error: 229 103 93;
+  --footer: 36 36 36;
   --band-low: 129 199 132;
-  --band-medium: 255 213 79;
+  --band-medium: 216 166 87; /* --warn #d8a657 */
   --band-high: 255 183 77;
-  --band-critical: 255 180 171;
+  --band-critical: 229 103 93; /* --crit */
   color-scheme: dark;
 }
 

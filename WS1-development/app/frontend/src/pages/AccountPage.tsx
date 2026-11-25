@@ -45,7 +45,7 @@ export default function AccountPage() {
     <>
       <PageHeader eyebrow="My account" title="Profile and security" />
       <div className="mb-5 flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-container text-lg font-bold text-white">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-on-accent">
           {initials(me.full_name)}
         </span>
         <div className="min-w-0">
