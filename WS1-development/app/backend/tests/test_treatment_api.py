@@ -3,7 +3,8 @@ T27, T28), ending with the brief's whole required demonstration as one scripted 
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,7 +16,9 @@ from tests.conftest import sign_in
 
 PDF = b"%PDF-1.7\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF"
 EXE = b"MZ\x90\x00" + b"\x00" * 60
-TODAY = date.today()
+# Deadlines are judged in The Alajo's zone (WAT), not this machine's: between midnight and
+# 02:00 EAT the two dates differ, so take "today" the way the app does.
+TODAY = datetime.now(ZoneInfo("Africa/Lagos")).date()
 
 
 def pdf(name: str = "proof.pdf", content: bytes = PDF) -> dict:
