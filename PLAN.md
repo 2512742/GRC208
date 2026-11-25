@@ -54,6 +54,7 @@ Revision 3 (19 Nov 2026): hosting decided as **Vercel + Neon PostgreSQL** (proje
 13. **Hosting:** **Vercel + Neon PostgreSQL** (19 Nov, user's decision; Neon project created). See §1.2.
 14. **Accounts:** the GitHub repository and the Vercel project are both owned by Ocen's personal accounts (19 Nov). Teammates join the GitHub repo as collaborators; only Ocen has Vercel dashboard access. See §5 for how teammates' work still deploys.
 15. **VPS fallback kept open (19 Nov):** the user owns the domain `tinex.tech` and a shared VPS already running another project (`/home/tinex/sentinel/`). If Vercel misbehaves, deploy as one long-running service on that VPS with the in-project SQLite file (`backend/data/` on persistent disk, backed up) behind the existing web server, e.g. a `risktrack.tinex.tech` subdomain. No code change is needed: only `DATABASE_URL` differs.
+16. **Database roles changed (26 Nov):** SQLite on the VPS is the live database. Neon PostgreSQL (`neondb`) becomes the **remote backup**: after the daily file backup, `backup-to-postgres` replaces it with a full copy (row counts and the audit hash chain checked), and `restore-from-backup --into <new file>` rebuilds SQLite from it. `.env` holds Neon only as `BACKUP_DATABASE_URL`; Vercel + Neon stays a fallback, and because Neon holds the full data, switching is only a `DATABASE_URL` change. See `WS1-development/app/deploy/vps/README.md`.
 
 ### A.5 Machine and environment
 - Parrot OS, Python 3.13.5, Node 20.20 / npm 10.8, `git`, `psql`, `docker`; VS Code with Claude Code. Backend venv at `app/backend/.venv`.
@@ -128,10 +129,10 @@ What we lose by leaving Django, and how we cover it: no built-in admin panel (ad
 | Migrations | Run `alembic upgrade head` against the direct URL from the developer machine or a GitHub Action before deploying, **not** in the Vercel build | Guardian ran `migrate` inside the Vercel build; separating it avoids half-applied migrations on a failed build |
 | Local development | In-project SQLite file `app/backend/data/risktrack.sqlite3` (default when `DATABASE_URL` is unset); created 19 Nov, migrated and loaded | Nothing to install; graders use this path; also the database for a VPS deployment |
 | Tests | Temporary SQLite file per run (fast, default). `TEST_DB=neon pytest` runs the same suite on the Neon database **`risktrack_test`** (created 19 Nov; same server, never `neondb`; about 5 minutes because of the Uganda to Ohio round trips). CI runs a `postgres:18` service container and never receives Neon credentials. The suite refuses any PostgreSQL database whose name lacks "test" | Catches SQLite-vs-PostgreSQL differences before they reach production |
-| Neon databases | `neondb` on branch `production` = the hosted demo (migrated to head and reference-loaded on 19 Nov); `risktrack_test` = automated tests only. A `dev` child branch can be added if the team needs a shared online playground | Never experiment on the demo data |
+| Neon databases | `neondb` on branch `production` = the remote backup copy of the live VPS database (since 26 Nov; before that the planned hosted database); `risktrack_test` = automated tests only. A `dev` child branch can be added if the team needs a shared online playground | Never experiment on the demo data |
 | Evidence files | Stored in PostgreSQL as bytes, max 4 MB each | Vercel request bodies are capped at about 4.5 MB; the free plan's storage (about 0.5 GB) easily holds demo evidence. Neon's Object storage (visible in the project sidebar) is a fallback if files ever outgrow this |
 | Cold start | First request after idle can take a second or two (Neon compute wakes, Vercel function starts) | Open the site once before recording the video or the live demo |
-| Backups | `python -m app.cli export-backup` (JSON of all tables) before any schema change; Neon's 6-hour history allows point-in-time restore as a second net | Guardian's runbook lesson |
+| Backups | Daily on the VPS: a SQLite file copy (14 days kept), then a full copy to Neon `neondb` (`backup-to-postgres`, since 26 Nov). `export-backup` (JSON of all tables) before any schema change. Neon's 6-hour history allows point-in-time restore of the copy | Guardian's runbook lesson; two places, two formats |
 
 Not used from Neon: Neon Auth / Better Auth, Data API, Functions, AI Gateway. Our own auth is part of what the project demonstrates.
 
@@ -752,15 +753,14 @@ Raised by Omotayo Akinola (gaps against the brief), Emmanuel's updated prototype
 
 ## 10. Developer workflow (local)
 
-`.env` points at the Neon **production** database, so every local command overrides it with the in-project SQLite file.
+Local commands use the in-project SQLite file (`backend/data/risktrack.sqlite3`). Since 26 Nov `.env` holds Neon only as `BACKUP_DATABASE_URL`, so no override is needed.
 
 **Check the built app** (one address):
 
 ```bash
 cd "WS1-development/app/frontend" && npm run build
 cd ../backend
-DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" COOKIE_SECURE=false \
-  .venv/bin/uvicorn app.main:app --port 8000
+COOKIE_SECURE=false .venv/bin/uvicorn app.main:app --port 8000
 ```
 
 Open http://127.0.0.1:8000. If the old look appears, the installed-app cache is serving the previous version: click **Reload** on the "new version" bar or press Ctrl+Shift+R.
@@ -770,8 +770,7 @@ Open http://127.0.0.1:8000. If the old look appears, the installed-app cache is 
 ```bash
 # Terminal 1: API
 cd "WS1-development/app/backend"
-DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" COOKIE_SECURE=false \
-  .venv/bin/uvicorn app.main:app --reload --port 8000
+COOKIE_SECURE=false .venv/bin/uvicorn app.main:app --reload --port 8000
 
 # Terminal 2: interface
 cd "WS1-development/app/frontend" && npm run dev
@@ -781,7 +780,7 @@ Open http://localhost:5173; interface changes appear instantly.
 
 **Useful commands:**
 - Free port 8000: find the process with `ss -ltnp | grep :8000`, then `kill <pid>`.
-- Reset the demo data: `DATABASE_URL="sqlite:///$PWD/data/risktrack.sqlite3" DATABASE_URL_DIRECT="" .venv/bin/python -m app.cli seed-demo --reset --yes` (in `backend/`; demo password `Alajo-Demo-2026!`, local only).
-- Tests: `.venv/bin/pytest` in `backend/`, `npm test` in `frontend/`. Deadlines are judged in Lagos time (WAT), so tests take "today" in Africa/Lagos.
+- Reset the demo data: `.venv/bin/python -m app.cli seed-demo --reset --yes` (in `backend/`; demo password `Alajo-Demo-2026!`, local only).
+- Tests: `.venv/bin/pytest` in `backend/`, `npm test` in `frontend/`. For PostgreSQL, use a local `postgres:18` container (see the app README); Neon is too slow from here for the full suite. Deadlines are judged in Lagos time (WAT), so tests take "today" in Africa/Lagos.
 - After moving the folder, recreate the Python environment: `rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt`.
 

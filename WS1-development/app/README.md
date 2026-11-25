@@ -7,9 +7,9 @@ Cyber Risk Register and Treatment Management Platform, built by ICDFA GRC208 Gro
 ## Stack
 
 - **Backend:** Python 3.12+ (3.13 locally), FastAPI, SQLModel/SQLAlchemy 2, Alembic
-- **Database:** SQLite by default; PostgreSQL (Neon) when hosted
+- **Database:** SQLite (the live database, on the VPS); PostgreSQL 18 on Neon holds the remote backup copy (the app also runs on PostgreSQL)
 - **Frontend:** React 19 + Vite 7 + TypeScript + Tailwind 3 (Guardian "Deep Intel" design system), TanStack Query; Node 20.19+
-- **Hosting:** Vercel (API as a Python function, region `cle1`) + Neon PostgreSQL (us-east-2)
+- **Hosting:** shared VPS (Docker Compose behind Caddy); remote backup on Neon (us-east-2); Vercel + Neon kept as a fallback
 
 ## Run it locally (SQLite, nothing else to install)
 
@@ -86,7 +86,7 @@ TEST_DATABASE_URL=postgresql://risktrack:risktrack@localhost:55432/risktrack_tes
 docker stop risktrack-pg
 ```
 
-Against the team's Neon server (database `risktrack_test`, never production; needs the Neon URLs in `.env`). Slower, because every query crosses the network; run it before merging or deploying:
+Against the team's Neon server (database `risktrack_test`, never the backup database; needs `BACKUP_DATABASE_URL` in `.env`). Every query crosses the network, so from a slow connection this can take hours; prefer the local container above:
 
 ```bash
 TEST_DB=neon pytest
@@ -175,7 +175,8 @@ All settings come from environment variables or `.env` (real environment variabl
 | `SECRET_KEY` | yes | none | 32+ characters. The app refuses to start without it |
 | `DEBUG` | no | `false` | Never `true` on Vercel |
 | `DATABASE_URL` | no | `backend/data/risktrack.sqlite3` | On Vercel: Neon **pooled** URL |
-| `DATABASE_URL_DIRECT` | no | `DATABASE_URL` | Neon **direct** URL, used only for migrations |
+| `DATABASE_URL_DIRECT` | no | `DATABASE_URL` | Neon **direct** URL, used only for migrations (Vercel fallback only) |
+| `BACKUP_DATABASE_URL` | no | none | Neon **direct** URL of the remote backup database; used only by `backup-to-postgres` and `restore-from-backup` |
 | `ORG_TIMEZONE` | no | `Africa/Lagos` | Deadlines and expiry are evaluated in this zone |
 | `LOG_FILE` | no | none | Local runs only |
 | `SESSION_HOURS` / `SESSION_IDLE_MINUTES` | no | `12` / `120` | Absolute and idle session limits |
@@ -184,11 +185,11 @@ All settings come from environment variables or `.env` (real environment variabl
 
 ## Deployment
 
-**Live:** https://thealajo.tinex.tech, on the team lead's shared VPS (Docker Compose behind the server's shared Caddy, which provides HTTPS; SQLite in a Docker volume; daily backups). Setup, updates and removal: [`deploy/vps/README.md`](deploy/vps/README.md). Owned and run by the technical lead.
+**Live:** https://thealajo.tinex.tech, on the team lead's shared VPS (Docker Compose behind the server's shared Caddy, which provides HTTPS; SQLite in a Docker volume; a daily file backup, then a full copy to Neon PostgreSQL). Setup, updates and removal: [`deploy/vps/README.md`](deploy/vps/README.md). Owned and run by the technical lead.
 
 ### Alternative: Vercel + Neon
 
-Kept ready in case the VPS is unavailable:
+Kept ready in case the VPS is unavailable. Neon already holds a full copy of the live data (refreshed daily), so switching means pointing `DATABASE_URL` at it:
 
 1. In Vercel, import the GitHub repository and set **Root Directory** to `WS1-development/app`; set the environment variables above for Production (pooled Neon URL as `DATABASE_URL`, a new random `SECRET_KEY`).
 2. From a developer machine whose `.env` holds the Neon URLs: `alembic upgrade head`, then `python -m app.cli load-reference` (migrations use `DATABASE_URL_DIRECT`).

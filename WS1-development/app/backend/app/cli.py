@@ -1,7 +1,8 @@
 """Command-line tools:  python -m app.cli --help   (run from app/backend)
 
 Every command states which database it is about to touch, so a Neon URL in `.env` is never
-changed by surprise. Commands: load-reference, create-user, seed-demo, verify-audit, export-backup.
+changed by surprise. Commands: load-reference, create-user, seed-demo, verify-audit, export-backup,
+backup-to-postgres, restore-from-backup.
 """
 
 from __future__ import annotations
@@ -234,3 +235,61 @@ def export_openapi_command(
 
 if __name__ == "__main__":
     cli()
+
+
+def _backup_url() -> str:
+    url = get_settings().backup_database_url
+    if not url:
+        typer.echo("BACKUP_DATABASE_URL is not set (the remote PostgreSQL backup).", err=True)
+        raise typer.Exit(code=2)
+    return url
+
+
+@cli.command("backup-to-postgres")
+def backup_to_postgres_command(
+    yes: bool = typer.Option(False, "--yes", "-y", help="Don't ask before replacing the copy"),
+) -> None:
+    """Replace the remote PostgreSQL backup with a full copy of the live database."""
+    from app.services.backup import BackupError, copy_database
+
+    settings = get_settings()
+    target = _backup_url()
+    typer.echo(f"From: {describe_database(settings.database_url)}")
+    typer.echo(f"To:   {describe_database(target)} (its current contents are replaced)")
+    if not yes:
+        typer.confirm("Continue?", abort=True)
+    try:
+        report = copy_database(settings.database_url, target)
+    except BackupError as exc:
+        typer.echo(f"Backup failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        f"OK: {report.total} rows in {len(report.rows)} tables at revision {report.revision}; "
+        f"audit chain intact ({report.audit_entries} entries)."
+    )
+
+
+@cli.command("restore-from-backup")
+def restore_from_backup_command(
+    into: Path = typer.Option(..., "--into", help="New SQLite file to create (must not exist)"),
+) -> None:
+    """Rebuild a SQLite database from the remote PostgreSQL backup, into a new file."""
+    from app.services.backup import BackupError, copy_database
+
+    source = _backup_url()
+    into = into.resolve()
+    if into.exists():
+        typer.echo(f"{into} already exists; choose a new file name.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"From: {describe_database(source)}")
+    typer.echo(f"To:   new SQLite file {into}")
+    try:
+        report = copy_database(source, f"sqlite:///{into}")
+    except BackupError as exc:
+        into.unlink(missing_ok=True)
+        typer.echo(f"Restore failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        f"OK: {report.total} rows restored; audit chain intact ({report.audit_entries} entries). "
+        "Stop the app, replace the live file with this one, then start it again."
+    )

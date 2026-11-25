@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     database_url: str = DEFAULT_SQLITE_URL
     # Direct (non-pooled) URL for Alembic migrations only. Falls back to database_url.
     database_url_direct: str | None = None
+    # Remote PostgreSQL backup (Neon): a full copy of the live database, refreshed by
+    # `backup-to-postgres` after each daily file backup. Never used by the running app.
+    backup_database_url: str | None = None
 
     # The Alajo's official zone: business rules ("today", overdue, expired) use it.
     org_timezone: str = "Africa/Lagos"
@@ -74,7 +77,7 @@ class Settings(BaseSettings):
     # Trust X-Forwarded-For for the client address. Always on under Vercel's proxy.
     trust_proxy_headers: bool = False
 
-    @field_validator("database_url", "database_url_direct")
+    @field_validator("database_url", "database_url_direct", "backup_database_url")
     @classmethod
     def _normalise_url(cls, value: str | None) -> str | None:
         return normalise_database_url(value) if value else value

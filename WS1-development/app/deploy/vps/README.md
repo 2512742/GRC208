@@ -8,10 +8,11 @@ that server's hosting guide (one shared Caddy for HTTPS, apps on `172.17.0.1:<po
 | Address | https://thealajo.tinex.tech (A record to the VM) |
 | Runs as | Docker Compose project `risktrack`, in `~/apps/risktrack` |
 | Port | `172.17.0.1:9120` (reachable only through Caddy) |
-| Database | SQLite in the Docker volume `risktrack_data` |
+| Database | SQLite in the Docker volume `risktrack_data` (the live database) |
+| Remote backup | PostgreSQL on Neon (`neondb`): a full copy, refreshed after each daily backup |
 | Memory limit | 384 MB |
 | Site file | `~/WaterCheck/infra/sites/risktrack.caddy` (copy: `risktrack.caddy` here) |
-| Backups | `~/apps/risktrack/deploy/vps/backup.sh`, daily from cron, to `~/backups/risktrack-*.db.gz`, 14 days kept |
+| Backups | `~/apps/risktrack/deploy/vps/backup.sh`, daily from cron: to `~/backups/risktrack-*.db.gz` (14 days kept), then to Neon |
 
 ## Settings (`~/apps/risktrack/.env`, mode 600, created on the server only)
 
@@ -21,6 +22,7 @@ DEBUG=false
 DATABASE_URL=sqlite:////app/backend/data/risktrack.sqlite3
 ORG_TIMEZONE=Africa/Lagos
 TRUST_PROXY_HEADERS=true
+BACKUP_DATABASE_URL=<Neon direct (non-pooled) URL of neondb, with sslmode=require>
 ```
 
 The hosted demo password is not the README one; it lives in `~/apps/risktrack/.demo-password`
@@ -39,6 +41,31 @@ docker compose -f deploy/vps/docker-compose.yml --project-directory . up -d --bu
 ```
 
 Migrations run automatically when the container starts. Then run the hosting guide's health checks.
+
+## Remote backup on Neon
+
+The live database is the SQLite file. Neon keeps a full copy in PostgreSQL. After the daily
+file backup, `backup.sh` runs `backup-to-postgres`, which:
+
+1. takes a consistent snapshot of the SQLite file;
+2. brings Neon up to the same schema version;
+3. replaces Neon's contents in one transaction;
+4. checks the row counts and the audit hash chain on the copy.
+
+If anything fails, Neon keeps the previous copy and the log line says FAILED. The log is
+`~/backups/risktrack-backup.log`.
+
+To refresh Neon now: `$C exec app python -m app.cli backup-to-postgres --yes`.
+
+To rebuild the live database from Neon (for example, a new VM):
+
+```bash
+C="docker compose -f deploy/vps/docker-compose.yml --project-directory ."
+$C exec app python -m app.cli restore-from-backup --into /app/backend/data/restored.sqlite3
+$C stop app
+$C run --rm --no-deps --entrypoint sh app -c 'cd /app/backend/data && mv risktrack.sqlite3 before-restore.sqlite3 && mv restored.sqlite3 risktrack.sqlite3'
+$C start app
+```
 
 ## Useful commands (on the VM, in `~/apps/risktrack`)
 

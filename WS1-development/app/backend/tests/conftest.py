@@ -31,9 +31,10 @@ def _neon_test_url() -> str:
     from app.core.config import Settings
 
     settings = Settings()  # type: ignore[call-arg]  # reads .env
-    if settings.is_sqlite:
-        raise RuntimeError("TEST_DB=neon needs the Neon URLs in .env")
-    source = settings.database_url_direct or settings.database_url  # direct: tests run DDL
+    candidates = (settings.backup_database_url, settings.database_url_direct, settings.database_url)
+    source = next((u for u in candidates if u and u.startswith("postgresql")), None)
+    if source is None:
+        raise RuntimeError("TEST_DB=neon needs a Neon URL (BACKUP_DATABASE_URL) in .env")
     url = make_url(source).set(database=NEON_TEST_DATABASE)
     return url.render_as_string(hide_password=False)
 
@@ -58,6 +59,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
 )
 # Empty (not removed): a real env var beats the developer's .env, which may hold Neon URLs.
 os.environ["DATABASE_URL_DIRECT"] = ""
+os.environ["BACKUP_DATABASE_URL"] = ""  # tests never reach the real remote backup
 os.environ.pop("VERCEL", None)
 
 import pytest  # noqa: E402
