@@ -58,8 +58,10 @@ describe("risk display", () => {
 
   it("formats timestamps in the signed-in user's zone with UTC in the tooltip", () => {
     renderAs(<DateTime iso="2026-12-05T13:30:00Z" />, person("auditor", ROLE_PERMS.auditor));
-    const el = screen.getByText("5 Dec 2026, 14:30 WAT");
-    expect(el).toHaveAttribute("title", "2026-12-05T13:30:00Z (UTC)");
+    // Date and time are separate unbreakable pieces, so the text may wrap after the comma on phones.
+    const el = screen.getByTitle("2026-12-05T13:30:00Z (UTC)");
+    expect(el.tagName).toBe("TIME");
+    expect(el).toHaveTextContent("5 Dec 2026, 14:30 WAT");
   });
 });
 

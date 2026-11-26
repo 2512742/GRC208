@@ -160,7 +160,7 @@ function MoreSheet({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="More">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="sheet-in absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+      <div className="sheet-in absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <NavLink to="/account" onClick={onClose} className="flex min-w-0 items-center gap-3 text-ink no-underline hover:no-underline">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent">

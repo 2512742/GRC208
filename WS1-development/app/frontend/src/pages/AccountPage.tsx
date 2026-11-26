@@ -106,9 +106,9 @@ function SecuritySummary({ s, onGo }: { s: SecurityOverview; onGo: (t: Tab) => v
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {items.map((i) => (
-        <button key={i.label} type="button" onClick={() => onGo(i.tab)} className="card p-3 text-left hover:bg-hover">
+        <button key={i.label} type="button" onClick={() => onGo(i.tab)} className="card min-w-0 p-3 text-left hover:bg-hover">
           <div className="label-caps text-[11px] leading-tight">{i.label}</div>
-          <div className={cx("mt-1 text-sm font-semibold", i.tone === "warn" ? "text-band-high" : i.tone === "ok" ? "text-band-low" : "")}>
+          <div className={cx("mt-1 break-words text-sm font-semibold", i.tone === "warn" ? "text-band-high" : i.tone === "ok" ? "text-band-low" : "")}>
             {i.value}
           </div>
         </button>

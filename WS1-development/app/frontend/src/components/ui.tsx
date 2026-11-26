@@ -276,12 +276,25 @@ export function SelectField({
 
 // ── Data display ──────────────────────────────────────────────────────────────────────────
 
+/** "23 Nov 2026, 13:53 EAT" never breaks inside the date or the time, but may wrap after the
+ * comma, so it fits narrow tiles and table cells on phones. */
+function splitAtComma(text: string) {
+  const at = text.indexOf(", ");
+  if (at < 0) return <span className="whitespace-nowrap">{text}</span>;
+  return (
+    <>
+      <span className="whitespace-nowrap">{text.slice(0, at + 1)}</span>{" "}
+      <span className="whitespace-nowrap">{text.slice(at + 2)}</span>
+    </>
+  );
+}
+
 export function DateTime({ iso }: { iso: string | null | undefined }) {
   const { zone } = useAuth();
   if (!iso) return <span className="text-muted">—</span>;
   return (
-    <time dateTime={iso} title={formatUtc(iso)} className="whitespace-nowrap">
-      {formatDateTime(iso, zone)}
+    <time dateTime={iso} title={formatUtc(iso)}>
+      {splitAtComma(formatDateTime(iso, zone))}
     </time>
   );
 }
@@ -380,12 +393,12 @@ export function DataTable<T>({
             onClick={onRowClick ? () => onRowClick(row) : undefined}
           >
             {mobileHeader && <div className="mb-2 border-b border-line pb-2">{mobileHeader(row)}</div>}
-            <dl className="grid grid-cols-[68px_minmax(0,1fr)] gap-x-2.5 gap-y-1">
+            <dl className="grid grid-cols-[minmax(68px,96px)_minmax(0,1fr)] gap-x-2.5 gap-y-1">
               {columns
                 .filter((c) => !c.hideOnMobile)
                 .map((c) => (
                   <div key={c.key} className="contents">
-                    <dt className="pt-0.5 text-[0.6rem] font-bold uppercase leading-snug tracking-[0.07em] text-muted">
+                    <dt className="min-w-0 break-words pt-0.5 text-[0.6rem] font-bold uppercase leading-snug tracking-[0.07em] text-muted">
                       {c.header}
                     </dt>
                     <dd className="min-w-0 break-words text-[13px]">{c.render(row)}</dd>
@@ -443,7 +456,7 @@ export function Tabs<K extends string>({
   onChange: (key: K) => void;
 }) {
   return (
-    <div role="tablist" className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+    <div role="tablist" className="flex flex-wrap gap-x-1 border-b border-line">
       {tabs.map((t) => (
         <button
           key={t.key}
@@ -452,7 +465,7 @@ export function Tabs<K extends string>({
           aria-selected={t.key === active}
           onClick={() => onChange(t.key)}
           className={cx(
-            "-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold",
+            "-mb-px whitespace-nowrap border-b-2 px-2 py-2 text-sm font-semibold sm:px-3",
             t.key === active
               ? "border-accent text-accent"
               : "border-transparent text-muted hover:text-ink",

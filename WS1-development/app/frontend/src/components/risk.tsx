@@ -48,11 +48,11 @@ export function InherentResidual({ risk }: { risk: Pick<RiskSummary, "inherent" 
   const inherent = risk.inherent?.score ?? risk.original_score;
   if (inherent == null) return <span className="text-muted">—</span>;
   return (
-    <span className="whitespace-nowrap text-sm" title={risk.residual ? `Inherent ${inherent}, residual ${risk.residual.score}` : `Inherent ${inherent}, not yet reassessed`}>
+    <span className="text-sm" title={risk.residual ? `Inherent ${inherent}, residual ${risk.residual.score}` : `Inherent ${inherent}, not yet reassessed`}>
       <span className="mono-data font-semibold">{inherent}</span>
       {risk.residual ? (
         <>
-          {" → "}
+          {"\u00a0→ "}
           <span className="mono-data font-semibold">{risk.residual.score}</span>
         </>
       ) : (

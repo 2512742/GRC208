@@ -152,7 +152,7 @@ export default function RiskDetailPage() {
             <div className="flex flex-col gap-4">
               <ScoreBadge score={risk.current} />
               <Explanation text={risk.current.explanation} />
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center sm:gap-3">
                 <ScoreBox label="Inherent" score={risk.inherent?.score ?? risk.original_score} />
                 <ScoreBox label="Target" score={latestDecision?.target_score ?? null} />
                 <ScoreBox label="Residual" score={risk.residual?.score} empty="not yet reassessed" />
@@ -382,8 +382,8 @@ export default function RiskDetailPage() {
 
 function ScoreBox({ label, score, empty = "not set" }: { label: string; score: number | null | undefined; empty?: string }) {
   return (
-    <div className="border border-line p-3">
-      <div className="label-caps">{label}</div>
+    <div className="min-w-0 border border-line p-2 sm:p-3">
+      <div className="label-caps break-words text-[10px] sm:text-xs">{label}</div>
       <div className="mono-data mt-1 text-2xl font-bold">{score ?? "—"}</div>
       {score ? <BandBadge band={bandFor(score)} /> : <span className="text-xs text-muted">{empty}</span>}
     </div>

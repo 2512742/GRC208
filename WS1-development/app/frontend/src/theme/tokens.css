@@ -122,7 +122,7 @@ html.dark {
     @apply min-h-[30px] px-3 py-1 text-xs;
   }
   .input {
-    @apply block w-full border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60;
+    @apply block w-full border border-line bg-surface px-3 py-2 text-base text-ink sm:text-sm placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60;
   }
   .card {
     @apply border border-line bg-surface;
@@ -215,4 +215,10 @@ html.dark {
   .sheet-in {
     animation: none;
   }
+}
+
+/* iPhone in landscape: keep content clear of the notch and rounded corners. */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
