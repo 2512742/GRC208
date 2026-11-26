@@ -16,7 +16,7 @@ function serviceWorker(): Plugin {
     apply: "build",
     generateBundle(_options, bundle) {
       const built = Object.keys(bundle).filter((f) => /\.(js|css)$/.test(f) && f.startsWith("assets/"));
-      const shell = ["/", "/index.html", "/theme-init.js", "/manifest.webmanifest", "/favicon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-icon.png"];
+      const shell = ["/", "/index.html", "/theme-init.js", "/manifest.webmanifest", "/favicon.svg?v=2", "/icons/icon-192.png?v=2", "/icons/icon-512.png?v=2", "/icons/maskable-512.png?v=2", "/icons/apple-touch-icon.png?v=2"];
       const precache = [...shell, ...built.map((f) => `/${f}`)];
       const version = createHash("sha256").update(precache.join("|")).digest("hex").slice(0, 12);
       const source = readFileSync(new URL("./sw.template.js", import.meta.url), "utf8")
