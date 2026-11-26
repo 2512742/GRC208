@@ -12,17 +12,21 @@ Shared items (the same for everyone) are listed in `docs/submission-guide.md`. T
 
 Paste into the E-Campus rich-text field. Describe your tasks, decisions and contribution. It must match your row in report section 6.2 and in `docs/contributions.md`.
 
+*Guide drafted by Ocen (26 Nov 2026) so everyone knows what is expected. Keep only what is true for you, replace every [bracket] with your real work and its evidence, delete the rest, then rewrite it in your own words. Evidence means something anyone can check: a GitHub commit or file, a test ID (T01 to T32), a report section, or a screenshot ID (E01 to E22, D1, D2).*
+
 **Tasks I was responsible for:**
-- 
+- Functional and demonstration-step testing (WS3)
 
 **Work I personally completed (with evidence: commit, file, test ID, report section, screenshot ID):**
-- 
+- [Walked through the brief's demonstration steps on the live site; date and result for each]
+- [Tests you ran, e.g. T08 to T10, with results in report section 4.1]
+- [Screenshots of any problem you reported]
 
 **Decisions I made or influenced, and why:**
-- 
+- [A problem you found and how it was resolved]
 
 **What I can explain at the defence:**
-- 
+- The required demonstration from start to finish (E05 to E10)
 
 ## 2. AI-use declaration
 
