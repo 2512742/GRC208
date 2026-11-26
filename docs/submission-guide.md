@@ -30,7 +30,7 @@ Each workstream folder (`WS1-development` to `WS5-presentation`) holds its own w
 | Shared item | Owner | Status | Frozen version / date |
 |---|---|---|---|
 | Abstract | Deborah Orimikoya | Draft v0.1 (265 words) for review | |
-| Project documentation PDF | Ponsel Iliya | Draft v0.2 `.docx`: plain black and white, 21 pages; owners fill [bracketed] items | |
+| Project documentation PDF | Ponsel Iliya | Draft v0.3 `.docx` (26 Nov): 22 pages, inherent/residual wording, new figures labelled with evidence IDs; owners fill [bracketed] items | |
 | Slides | Daniella Edinam Nyaletey | Draft v0.2 `.pptx`: plain, 12 editable slides with speaker notes | |
 | Demo video link (viewing access checked) | Farida Baberin-Yor Beacher | Script drafted (`demo-video-script.md`); not recorded | |
 | Sample management report | Ocen Richard / Emmanuel Teye Adjei | Exported from the app (`WS4-documentation/report/sample-management-report.pdf`, 3 pages) | |
