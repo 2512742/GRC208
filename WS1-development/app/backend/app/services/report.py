@@ -221,7 +221,7 @@ def to_pdf(data: Overview, stamp: Stamp) -> bytes:
         [[data.by_band[b] for b in ("low", "medium", "high", "critical")]],
     )
 
-    pdf.heading("2. Heat map (current scores; rows = likelihood, columns = impact)")
+    pdf.heading("2. Heat map (residual, i.e. current scores; rows = likelihood, columns = impact)")
     grid = {(c.likelihood, c.impact): c.count for c in data.heat_map_current}
     pdf.table(
         ["L \\ I", "1", "2", "3", "4", "5"],

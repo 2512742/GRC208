@@ -1,0 +1,24 @@
+%% RiskTrack architecture (Figure 1). Render: Mermaid 11, grey theme, white background.
+flowchart LR
+  subgraph U["Users (browser or PWA)"]
+    users["Analyst, risk owners,<br/>approvers, auditor, admin"]
+  end
+  subgraph VPS["Shared Azure VPS"]
+    caddy["Caddy (shared front door)<br/>HTTPS, Let's Encrypt<br/>Ubuntu 24.04"]
+    subgraph C["Docker container (384 MB)"]
+      api["FastAPI /api<br/>auth, permissions, SoD,<br/>scoring, workflows, reports, import"]
+      web["React app (static build)<br/>served by FastAPI"]
+      audit["Hash-chained audit log"]
+    end
+    db[("SQLite in Docker volume<br/>(live database)")]
+    cron["Daily backup (cron)<br/>03:30 UTC, files kept 14 days"]
+  end
+  neon[("Neon PostgreSQL 18<br/>(remote backup: full copy,<br/>counts and audit chain checked)")]
+  users -- "HTTPS 443" --> caddy
+  caddy -- "172.17.0.1:9120<br/>(not reachable from the internet)" --> api
+  api --> web
+  api --> audit
+  api --> db
+  audit --> db
+  cron -. "SQLite online backup" .-> db
+  cron -. "backup-to-postgres<br/>(restore-from-backup)" .-> neon

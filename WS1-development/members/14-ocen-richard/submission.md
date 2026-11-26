@@ -21,7 +21,7 @@ Paste into the E-Campus rich-text field. Describe your tasks, decisions and cont
 **Work I personally completed (with evidence: commit, file, test ID, report section, screenshot ID):**
 - Backend in FastAPI: data model and migrations, scoring engine, treatment, reassessment and acceptance workflows, server-side segregation of duties, evidence handling, hash-chained audit log, dashboard and PDF/CSV reports, CSV import, account security (commits P0 to P6 and later in github.com/2512742/GRC208; tests T01 to T32).
 - React frontend on the Guardian design system, phone layout and installable app (commits U0 to U4; screenshots E01 to E19).
-- 467 automated backend tests and 26 frontend tests, run on SQLite and PostgreSQL 18 (report section 4).
+- 480 automated backend tests and 29 frontend tests, run on SQLite and PostgreSQL 18 (report section 4).
 - Deployment to https://thealajo.tinex.tech with HTTPS, backups and a deployment guide (`deploy/vps/`; report 3.1 and 5.1).
 - First drafts of the report, slides, abstract, video script and defence notes for the group to edit.
 
