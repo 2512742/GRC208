@@ -20,4 +20,4 @@ Maintained by the coordinators, Omotayo Akinola and Ocen Richard (WS6). One row 
 | 14 | Ocen Richard / 2025/GCR/12742 | WS1 Development: Technical lead, full-stack developer | | |
 | 15 | Omotayo Akinola / 2025/GCR/12813 | Group coordinator (schedules and chairs meetings); WS2 Risk framework lead | | |
 | 16 | Ouabo Kamdem Derrick Arnaud / 2025/GCR/12778 | WS1 Development: CSV import feature | | |
-| 17 | Ponsel Iliya / 2025/GCR/12779 | WS4 Documentation: Report editor, section 1 and final PDF | | |
+| 17 | Ponsel Iliya / 2025/GCR/12779 | WS4 Documentation: Report editor, section 1 and final PDF | Edited the report cover and refined Sections 1.1 (problem statement), 1.3 (scope), and 1.5 (existing tools). Improved clarity, consistency and explanation of the project's boundaries. | Personal submission: `WS4-documentation/members/17-ponsel-iliya/submission.md`; report Sections 1.1, 1.3 and 1.5. |
