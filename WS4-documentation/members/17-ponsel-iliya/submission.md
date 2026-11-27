@@ -1,3 +1,5 @@
+
+
 # E-Campus submission: Ponsel Iliya
 
 | | |
@@ -6,46 +8,49 @@
 | Workstream | WS4 Documentation |
 | Assigned role | Report editor, section 1 and final PDF |
 
-Shared items (the same for everyone) are listed in `docs/submission-guide.md`. This file holds **your personal fields only**. Write them yourself, in your own words.
-
 ## 1. Additional information / your contribution
 
-Paste into the E-Campus rich-text field. Describe your tasks, decisions and contribution. It must match your row in report section 6.2 and in `docs/contributions.md`.
-
-*Guide drafted by Ocen (26 Nov 2026) so everyone knows what is expected. Keep only what is true for you, replace every [bracket] with your real work and its evidence, delete the rest, then rewrite it in your own words. Evidence means something anyone can check: a GitHub commit or file, a test ID (T01 to T32), a report section, or a screenshot ID (E01 to E22, D1, D2).*
-
 **Tasks I was responsible for:**
-- Report editor: cover, section 1 and the final PDF (WS4)
+- Report editor: cover page, Section 1 and final PDF (WS4).
 
-**Work I personally completed (with evidence: commit, file, test ID, report section, screenshot ID):**
-- [Edited the cover and section 1]
-- [Merged everyone's edits and produced the final PDF; date]
+**Work I personally completed:**
+- Reviewed the project documentation and worked on the cover page and Section 1, covering the problem statement, objectives, scope, requirements and existing tools.
+- Prepared an edited working copy of the report, completing the group-level submission/date fields and improving the clarity and consistency of the problem statement, scope boundaries and comparison with existing GRC tools.
+- Preserved the report's stated project scenario, requirements and scope rather than introducing new project features or unsupported technical claims.
+- The final PDF export, full report integration and final freeze are still pending.
+
+**Evidence:**
+- Working document: `GRC208_Group1_Project_Documentation_Section1_Edited.docx`.
+- Report sections: cover page and Sections 1.1, 1.3 and 1.5.
+- Repository report location: `WS4-documentation/report/GRC208_Group1_Project_Documentation.docx`.
 
 **Decisions I made or influenced, and why:**
-- [An editing decision for the whole report, e.g. length, style or order, and why]
+- I retained the original problem, objectives and project boundaries while improving the wording for clarity and readability.
+- I clarified that the platform is a capstone solution and did not imply that excluded capabilities such as vulnerability scanning, email notifications or SSO are already implemented.
 
 **What I can explain at the defence:**
-- The problem, objectives and requirements (report section 1)
+- The organisational problem RiskTrack is intended to address.
+- The project objectives and how they relate to the requirements.
+- The boundaries of the project scope, including excluded features.
+- Why a centralised risk register and consistent scoring, treatment tracking and accountability are useful to The Alajo.
 
 ## 2. AI-use declaration
 
-- [ ] I used an AI-enabled tool while preparing this work. (Tick only if true for **you**.)
+- [x] I used an AI-enabled tool while preparing this work.
 
-**Tools used:**
+**Tools used:** ChatGPT (OpenAI).
 
-**How you used them** (purpose, what was produced, and how you checked the output):
-
-Keep this consistent with report section 6.3 and `docs/ai-use-log.md`.
+**How I used them:** I used ChatGPT to review the wording and structure of the cover page and Section 1, suggest clarity and consistency improvements, and prepare an edited working copy. I checked the suggestions against the existing project report and retained the team's stated scenario, objectives, scope and requirements. I reviewed the edited text before using it. The tool assisted with editing; it did not verify project implementation or testing results.
 
 ## 3. Pre-submission checklist
 
-- [ ] Abstract pasted from `WS5-presentation/abstract.md` (frozen version)
-- [ ] Project documentation PDF uploaded (frozen version)
-- [ ] Section 1 above pasted into "Additional information / your contribution"
+- [ ] Abstract pasted from the frozen WS5 version
+- [ ] Project documentation PDF uploaded
+- [ ] Contribution pasted into E-Campus
 - [ ] Slides PDF uploaded
-- [ ] Video HTTPS link pasted and opens for the instructor
-- [ ] AI-use declaration completed (section 2 above)
-- [ ] Draft saved and saved evidence reviewed on E-Campus
+- [ ] Video HTTPS link pasted and verified
+- [x] AI-use declaration completed
+- [ ] Draft saved and evidence reviewed on E-Campus
 - [ ] Wallet has at least NGN 1,000
 
 ## 4. Submission receipt
